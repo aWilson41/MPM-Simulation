@@ -20,6 +20,12 @@ public:
 		Camera::farZ = farZ;
 		proj = glm::perspective(fov, aspectRatio, nearZ, farZ);
 	}
+	void setOrtho(GLfloat left, GLfloat right, GLfloat top, GLfloat bottom, GLfloat nearZ, GLfloat farZ)
+	{
+		Camera::nearZ = nearZ;
+		Camera::farZ = farZ;
+		proj = glm::ortho(left, right, top, bottom, nearZ, farZ);
+	}
 	void setEyePos(glm::vec3 pos) { eyePos = pos; }
 	void setEyePos(GLfloat x, GLfloat y, GLfloat z) { setEyePos(glm::vec3(x, y, z)); }
 

@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	format.setSamples(4);
 	format.setRenderableType(QSurfaceFormat::OpenGL);
 	QSurfaceFormat::setDefaultFormat(format);
-	app.setApplicationName("SpringMassSim");
+	app.setApplicationName("MPM Sim");
 	MainWidget widget;
 	widget.show();
 	return app.exec();

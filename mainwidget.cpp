@@ -22,39 +22,29 @@ MainWidget::MainWidget(QWidget* parent) :
 void MainWidget::initializeGL()
 {
 	initializeOpenGLFunctions();
+	glEnable(GL_PROGRAM_POINT_SIZE);
+
 	glClearColor(0.4f, 0.58f, 0.9f, 1.0f);
 	initShaders();
 
-	/*poly = resourceLoader::loadPolygon("C:/Users/Andx_/Desktop/Cube.obj");
-	if (poly == nullptr)
-	{
-		QMessageBox::warning(this, tr("Error"), tr("Failed to load mesh."), QMessageBox::Ok);
-		exit(1);
-	}
-	poly->setShaderProgram(&program);
-	poly->world = mathHelper::matrixScale(0.2f);
-	Material* polyMat = new Material();
-	polyMat->setDiffuse(0.4f, 0.16f, 0.0f);
-	polyMat->setAmbientToDiffuse(0.8f);
-	materials.push_back(polyMat);
-	poly->setMaterial(polyMat);*/
+	srand(time(NULL));
 
-	softBody = resourceLoader::loadTetgenMesh("C:/Users/Andx_/Desktop/mesh/dragon.1", 8);
-	if (softBody == nullptr)
+	// Create some random points in a box
+	std::vector<glm::vec3> pts = std::vector<glm::vec3>(1000);
+	int range = 200;
+	glm::vec3 translate = glm::vec3(0.0f, 50.0f, 0.0f);
+	for (UINT i = 0; i < 1000; i++)
 	{
-		QMessageBox::warning(this, tr("Error"), tr("Failed to load mesh."), QMessageBox::Ok);
-		exit(1);
+		pts[i] = glm::vec3(rand() % range, rand() % range, rand() % range) - glm::vec3(range) * 0.5f + translate;
 	}
-	softBody->setShaderProgram(&program);
-	Material* mat = new Material();
-	mat->setDiffuse(0.4f, 0.16f, 0.0f);
-	mat->setAmbientToDiffuse(0.8f);
-	materials.push_back(mat);
-	softBody->setMaterial(mat);
-	softBody->calculateNormals();
+
+	ptCloud = new PointCloud();
+	ptCloud->setPoints(pts.data(), static_cast<UINT>(pts.size()));
+	ptCloud->world = mathHelper::matrixScale(1.0f);
+	ptCloud->setShaderProgram(&ptShader);
 
 	plane = new Plane();
-	plane->setShaderProgram(&program);
+	plane->setShaderProgram(&normShader);
 	plane->world = mathHelper::matrixTranslate(0.0f, -85.0f, 0.0f) * mathHelper::matrixScale(1000.0f);
 	Material* planeMat = new Material();
 	planeMat->setDiffuse(0.2f, 0.4f, 0.2f);
@@ -76,49 +66,31 @@ void MainWidget::initializeGL()
 void MainWidget::initShaders()
 {
 	// Compile vertex shader
-	if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vshader.glsl"))
+	if (!normShader.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vshader.glsl"))
 		close();
-
 	// Compile fragment shader
-	if (!program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fshader.glsl"))
+	if (!normShader.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fshader.glsl"))
 		close();
-
 	// Link shader pipeline
-	if (!program.link())
+	if (!normShader.link())
+		close();
+	// Bind shader pipeline for use
+	if (!normShader.bind())
 		close();
 
-	// Bind shader pipeline for use
-	if (!program.bind())
+	if (!ptShader.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/ptvShader.glsl"))
+		close();
+	if (!ptShader.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/ptfShader.glsl"))
+		close();
+	if (!ptShader.link())
+		close();
+	if (!ptShader.bind())
 		close();
 }
 
 void MainWidget::mousePressEvent(QMouseEvent* e)
 {
-	//poly->data[0].pos.x += 100.0f;
-	/*poly->vertexBuffer->bind();
-	VertexData* vertices = static_cast<VertexData*>(poly->vertexBuffer->map(QOpenGLBuffer::Access::WriteOnly));
-	vertices[0].pos.x += 100.0f;
-	poly->vertexBuffer->unmap();
-	poly->vertexBuffer->release();*/
 
-	glm::vec2 pos = glm::vec2(e->localPos().x(), height() - e->localPos().y());
-	glm::vec2 size = glm::vec2(width(), height()) / 2.0f;
-	pos = (pos - size) / size;
-	glm::vec4 pt = glm::vec4(pos.x, pos.y, 0.0f, 1.0f) * glm::inverse(cam.proj);
-	glm::vec3 dir = glm::normalize(glm::vec3(pt) - cam.eyePos);
-	//mathHelper::computeEyeRay(pos, width(), height(), cam.fov, cam.nearZ);
-
-	for (int i = 0; i < softBody->faceCount; i++)
-	{
-		glm::vec3 diff1 = softBody->faceData[i].v3->pos - softBody->faceData[i].v2->pos;
-		glm::vec3 diff2 = softBody->faceData[i].v3->pos - softBody->faceData[i].v1->pos;
-		glm::vec3 n = glm::normalize(glm::cross(diff1, diff2));
-		glm::vec4 results = mathHelper::triangleRayIntersection(mathHelper::Ray(glm::vec3(pt), dir), softBody->faceData[i].v1->pos, softBody->faceData[i].v2->pos, softBody->faceData[i].v3->pos, n);
-		if (results.x == 0.0f && results.y == 0.0f && results.z == 0.0f)
-			printf("Miss\n");
-		else
-			printf("Hit\n");
-	}
 }
 
 void MainWidget::mouseReleaseEvent(QMouseEvent* e)
@@ -169,7 +141,6 @@ void MainWidget::updateCamera(glm::vec2 pos)
 
 void MainWidget::timerEvent(QTimerEvent* e)
 {
-	softBody->update(0.02f, -20.6f);
 	update();
 }
 
@@ -182,37 +153,37 @@ void MainWidget::resizeGL(int w, int h)
 	// Set near plane to 0.001, far plane to 700.0, field of view 45 degrees
 	// Set the perspective projection matrix
 	cam.setPerspective(45.0, aspect, 0.001f, 10000.0f);
+	//cam.setOrtho(-1.0f, 1.0f, 1.0f, -1.0f, 0.001f, 10000.0f);
 }
 
 void MainWidget::paintGL()
 {
 	// Clear color and depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	program.bind();
-
-	// Set modelview-projection matrix
 	glm::mat4 viewProj = cam.proj * cam.view;
-	glUniform3f(program.uniformLocation("lightDir"), lightDir.x, lightDir.y, lightDir.z);
-	//poly->draw(viewProj);
-	softBody->draw(viewProj);
-	plane->draw(viewProj);
 
-	program.release();
+	normShader.bind();
+	glUniform3f(normShader.uniformLocation("lightDir"), lightDir.x, lightDir.y, lightDir.z);
+	plane->draw(viewProj);
+	normShader.release();
+
+	ptShader.bind();
+	glUniform3f(ptShader.uniformLocation("lightDir"), lightDir.x, lightDir.y, lightDir.z);
+	ptCloud->Draw(viewProj);
+	ptShader.release();
 }
 
 MainWidget::~MainWidget()
 {
+	// Delete the materials
 	for (UINT i = 0; i < materials.size(); i++)
 	{
 		if (materials[i] != nullptr)
 			delete materials[i];
 	}
 
-	if (poly != nullptr)
-		delete poly;
-	if (softBody != nullptr)
-		delete softBody;
+	if (ptCloud != nullptr)
+		delete ptCloud;
 	if (plane != nullptr)
 		delete plane;
 

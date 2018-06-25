@@ -1,9 +1,8 @@
 #pragma once
 #include "Engine\Camera.h"
 #include "Engine\Primitives.h"
-#include "Engine\Polygon.h"
 #include "Engine\Material.h"
-#include "SpringMassMesh.h"
+#include "Engine\PointCloud.h"
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
@@ -36,10 +35,10 @@ protected:
 private:
 	Camera cam;
 	QBasicTimer timer;
-	QOpenGLShaderProgram program;
-	Poly* poly = nullptr;
+	QOpenGLShaderProgram normShader;
+	QOpenGLShaderProgram ptShader;
 	Plane* plane = nullptr;
-	SpringMassMesh* softBody = nullptr;
+	PointCloud* ptCloud = nullptr;
 	std::vector<Material*> materials;
 
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
