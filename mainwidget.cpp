@@ -1,6 +1,10 @@
 #include "MainWidget.h"
 #include "Engine/ResourceLoader.h"
 #include "Engine/Geometry.h"
+#include "Particle.h"
+#include "Engine\Material.h"
+#include "Engine\PointCloud.h"
+#include "Engine\Primitives.h"
 
 #include <QMouseEvent>
 #include <QApplication>
@@ -30,13 +34,13 @@ void MainWidget::initializeGL()
 
 	srand(time(NULL));
 
-	// Create a polygon to randomely distribute points/particles in
+	// Create a polygon to randomly distribute points/particles in
 	geom::Poly circlePoly;
 	circlePoly.FromCircle(geom::Circle(0.0f, 50.0f, 100.0f), 25);
-	std::vector<glm::vec2> results = MathHelp::generatePointCloud(circlePoly, 200);
+	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, 400);
 	std::vector<glm::vec3> pts = std::vector<glm::vec3>(results.size());
-	// Convert the vec2 array to vec3
-	for (unsigned int i = 0; i < results.size(); i++)
+	// Link up the particles
+	for (UINT i = 0; i < results.size(); i++)
 	{
 		pts[i] = glm::vec3(results[i], 0.0f);
 	}
@@ -45,6 +49,13 @@ void MainWidget::initializeGL()
 	ptCloud->setPoints(pts.data(), static_cast<UINT>(pts.size()));
 	ptCloud->world = MathHelp::matrixScale(1.0f);
 	ptCloud->setShaderProgram(&ptShader);
+
+	// Create particles from the points
+	for (UINT i = 0; i < ptCloud->pts.size(); i++)
+	{
+		Particle* particle = new Particle(&ptCloud->pts[i]);
+		particles.push_back(particle);
+	}
 
 	plane = new Plane();
 	plane->setShaderProgram(&normShader);
@@ -142,7 +153,19 @@ void MainWidget::updateCamera(glm::vec2 pos)
 	cam.updateLookAt();
 }
 
-void MainWidget::timerEvent(QTimerEvent* e) { update(); }
+void MainWidget::timerEvent(QTimerEvent* e)
+{
+	update();
+	// constant timestep of 12ms
+	float dt = 0.05f;
+	for (UINT i = 0; i < particles.size(); i++)
+	{
+		particles[i]->applyForce(glm::vec3(0.0f, -9.8f, 0.0f));
+		particles[i]->integrate(dt);
+		particles[i]->resetForce();
+	}
+	ptCloud->updateBuffer();
+}
 
 
 void MainWidget::resizeGL(int w, int h)
@@ -175,6 +198,13 @@ void MainWidget::paintGL()
 
 MainWidget::~MainWidget()
 {
+	// Delete the particles
+	for (UINT i = 0; i < particles.size(); i++)
+	{
+		if (particles[i] != nullptr)
+			delete particles[i];
+	}
+
 	// Delete the materials
 	for (UINT i = 0; i < materials.size(); i++)
 	{

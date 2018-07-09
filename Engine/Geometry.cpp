@@ -2,6 +2,7 @@
 
 namespace geom
 {
+	// Shape Base
 	Shape::Shape()
 	{
 		pos = glm::vec2(0.0f);
@@ -14,6 +15,7 @@ namespace geom
 	}
 	GLfloat Shape::area() { return 0.0f; }
 
+	// Circle
 	Circle::Circle()
 	{
 		radius = 0.0f;
@@ -33,6 +35,7 @@ namespace geom
 	}
 	GLfloat Circle::area() { return TWOPI * radius; }
 
+	// Rectangle
 	Rect::Rect()
 	{
 		extent = glm::vec2(0.0f);
@@ -44,9 +47,9 @@ namespace geom
 		extent = size * 0.5f;
 		type = ShapeType::RECT;
 	}
-
 	GLfloat Rect::area() { return extent.x * extent.y * 2.0f; }
 
+	// Polygon
 	Poly::Poly() { type = ShapeType::POLY; }
 	Poly::Poly(glm::vec2* vertices, unsigned int count)
 	{
@@ -68,8 +71,9 @@ namespace geom
 		}
 		pos = circle.pos;
 	}
+	GLfloat Poly::area() { return MathHelp::polygonArea(this); }
 
-
+	// Ray
 	Ray::Ray(glm::vec3 start, glm::vec3 direction)
 	{
 		Ray::start = start;

@@ -44,12 +44,12 @@ glm::mat4 MathHelp::matrixScale(GLfloat x, GLfloat y, GLfloat z)
 	results[2][2] = z;
 	return results;
 }
-glm::mat4 MathHelp::matrixScale(float s) { return matrixScale(s, s, s); }
+glm::mat4 MathHelp::matrixScale(GLfloat s) { return matrixScale(s, s, s); }
 
 // We define the 2d cross product as the length of the 3d
 GLfloat MathHelp::cross(glm::vec2 a, glm::vec2 b) { return a.x * b.y - a.y * b.x; }
 
-glm::vec2 MathHelp::slope(float theta) { return glm::vec2(glm::cos(theta), glm::sin(theta)); }
+glm::vec2 MathHelp::slope(GLfloat theta) { return glm::vec2(glm::cos(theta), glm::sin(theta)); }
 
 glm::vec2 MathHelp::projAToB(glm::vec2 a, glm::vec2 b)
 {
@@ -120,7 +120,7 @@ glm::vec3 MathHelp::baryCentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3
 }
 
 // Computes ray given screen position, width, height, fov, and near plane
-geom::Ray MathHelp::computeEyeRay(glm::vec2 pos, UINT width, UINT height, float fov, float nearZ)
+geom::Ray MathHelp::computeEyeRay(glm::vec2 pos, UINT width, UINT height, GLfloat fov, GLfloat nearZ)
 {
 	GLfloat aspectRatio = static_cast<GLfloat>(width) / height;
 	GLfloat s = 2.0f * tan(fov * 0.5f);
@@ -128,30 +128,25 @@ geom::Ray MathHelp::computeEyeRay(glm::vec2 pos, UINT width, UINT height, float 
 	return geom::Ray(start, glm::normalize(start));
 }
 
-glm::vec3 MathHelp::lerp(glm::vec3 start, glm::vec3 end, float t) { return (start + t * (end - start)); }
+glm::vec3 MathHelp::lerp(glm::vec3 start, glm::vec3 end, GLfloat t) { return (start + t * (end - start)); }
 
-glm::vec3 MathHelp::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t)
+glm::vec3 MathHelp::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t)
 {
-	float t2 = t * t;
-	float t3 = t2 * t;
+	GLfloat t2 = t * t;
+	GLfloat t3 = t2 * t;
 	return 0.5f * ((2.0f * p1) + (-p0 + p2) * t +
 		(2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t2 +
 		(-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t3);
 }
 
-glm::vec2 MathHelp::calculateCentroid(glm::vec2* vertices, unsigned int count)
+glm::vec2 MathHelp::calculateCentroid(glm::vec2* vertices, UINT count)
 {
 	glm::vec2 centroid(0.0f);
-	float signedArea = 0.0f;
-	//float x0 = 0.0f; // Current vertex X
-	//float y0 = 0.0f; // Current vertex Y
+	GLfloat signedArea = 0.0f;
 	glm::vec2 v1; // Current vertex
 	glm::vec2 v2; // Next vertex
-	//float x1 = 0.0f; // Next vertex X
-	//float y1 = 0.0f; // Next vertex Y
-	float a = 0.0f;  // Partial signed area
-	// For all vertices except last
-	int i = 0;
+	GLfloat a = 0.0f; // Partial signed area
+	UINT i = 0;
 	for (i = 0; i < count - 1; ++i)
 	{
 		v1 = vertices[i];
@@ -171,14 +166,14 @@ glm::vec2 MathHelp::calculateCentroid(glm::vec2* vertices, unsigned int count)
 	return ((centroid + (v1 + v2) * a) / (6.0f * signedArea));
 }
 
-geom::Rect MathHelp::getBounds(glm::vec2* vertices, unsigned int count)
+geom::Rect MathHelp::getBounds(glm::vec2* vertices, UINT count)
 {
-	float maxX = std::numeric_limits<float>::min();
-	float minX = std::numeric_limits<float>::max();
-	float maxY = std::numeric_limits<float>::min();
-	float minY = std::numeric_limits<float>::max();
+	GLfloat maxX = std::numeric_limits<GLfloat>::min();
+	GLfloat minX = std::numeric_limits<GLfloat>::max();
+	GLfloat maxY = std::numeric_limits<GLfloat>::min();
+	GLfloat minY = std::numeric_limits<GLfloat>::max();
 
-	for (unsigned int i = 0; i < count; i++)
+	for (UINT i = 0; i < count; i++)
 	{
 		if (vertices[i].x > maxX)
 			maxX = vertices[i].x;
@@ -195,26 +190,54 @@ geom::Rect MathHelp::getBounds(glm::vec2* vertices, unsigned int count)
 	return geom::Rect(center, size);
 }
 
-std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly poly, unsigned int numPts)
+std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly, UINT numPts)
 {
 	std::vector<glm::vec2> results;
 
-	geom::Rect bounds = getBounds(poly.vertices.data(), poly.vertices.size());
+	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
 	glm::vec2 size = bounds.extent * 2.0f;
 
-	unsigned int ptCount = 0;
-	while (ptCount < numPts)
+	while (results.size() < numPts)
 	{
 		// Generate a random point
 		// Generate random in 0, 1000
-		glm::vec2 newPt = glm::vec2(static_cast<float>(rand() % 1000), static_cast<float>(rand() % 1000));
+		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(rand() % 1000), static_cast<GLfloat>(rand() % 1000));
 		// Change random to [-1, 1]
 		newPt = newPt / 500.0f - 1.0f;
 		// Change random to [-(width or height) / 2, (width or height) / 2] and add center
 		newPt = newPt * bounds.extent + bounds.pos;
 
 		// Check if the point lies in the polygon
+		if (isPointInPolygon(poly, newPt))
+			results.push_back(newPt);
 	}
 
 	return results;
+}
+
+bool MathHelp::isPointInPolygon(geom::Poly* poly, glm::vec2 pt)
+{
+	bool result = false;
+	UINT len = static_cast<UINT>(poly->vertices.size());
+	for (UINT i = 0, j = len - 1; i < len; j = i++)
+	{
+		glm::vec2& vi = poly->vertices[i];
+		glm::vec2& vj = poly->vertices[j];
+		if ((vi.y > pt.y) != (vj.y > pt.y) && (pt.x < (vj.x - vi.x) * (pt.y - vi.y) / (vj.y - vi.y) + vi.x))
+			result = !result;
+	}
+	return result;
+}
+
+GLfloat MathHelp::polygonArea(geom::Poly* poly)
+{
+	GLfloat area = 0.0f;
+	std::vector<glm::vec2>& vertices = poly->vertices;
+	UINT count = static_cast<UINT>(vertices.size());
+	for (UINT i = 0; i < count - 1; i++)
+	{
+		area += vertices[i].x * vertices[i + 1].y - vertices[i + 1].x * vertices[i].y;
+	}
+	area += vertices[count - 1].x * vertices[0].y - vertices[0].x * vertices[count - 1].y;
+	return area * 0.5f;
 }

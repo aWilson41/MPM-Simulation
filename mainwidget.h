@@ -1,13 +1,15 @@
 #pragma once
 #include "Engine\Camera.h"
-#include "Engine\Primitives.h"
-#include "Engine\Material.h"
-#include "Engine\PointCloud.h"
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QBasicTimer>
 #include <QOpenGLShaderProgram>
+
+class Particle;
+class Material;
+class PointCloud;
+class Plane;
 
 class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -37,9 +39,11 @@ private:
 	QBasicTimer timer;
 	QOpenGLShaderProgram normShader;
 	QOpenGLShaderProgram ptShader;
+
 	Plane* plane = nullptr;
 	PointCloud* ptCloud = nullptr;
 	std::vector<Material*> materials;
+	std::vector<Particle*> particles;
 
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
 

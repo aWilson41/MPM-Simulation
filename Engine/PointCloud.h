@@ -43,13 +43,24 @@ public:
 		posAttributeLocation = shaderProgram->attributeLocation("inPos");
 	}
 
+	// Updates the full buffer
+	void updateBuffer()
+	{
+		// Update the buffer
+		vertexBuffer->bind();
+		void* bufferData = vertexBuffer->map(QOpenGLBuffer::WriteOnly);
+		memcpy(bufferData, pts.data(), pts.size() * sizeof(glm::vec3));
+		vertexBuffer->unmap();
+		vertexBuffer->release();
+	}
+
 	void Draw(glm::mat4 viewProj)
 	{
 		//glEnable(GL_PROGRAM_POINT_SIZE);
 		//glPointSize(10);
 		setUniforms(viewProj);
 
-		// Tell OpenGL which VBOs to use
+		// Tell OpenGL which VBO to use
 		vertexBuffer->bind();
 
 		quintptr offset = 0;

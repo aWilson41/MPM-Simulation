@@ -61,6 +61,8 @@ namespace geom
 
 	public:
 		void FromCircle(Circle circle, unsigned int divisions);
+		// Signed area
+		GLfloat area() override;
 
 	public:
 		std::vector<glm::vec2> vertices;
@@ -70,9 +72,10 @@ namespace geom
 	class Ray
 	{
 	public:
+		Ray(glm::vec3 start, glm::vec3 direction);
+
+	public:
 		glm::vec3 start;
 		glm::vec3 direction;
-
-		Ray(glm::vec3 start, glm::vec3 direction);
 	};
 }

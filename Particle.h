@@ -7,10 +7,7 @@ class Particle
 public:
 	Particle() { }
 
-	Particle(glm::vec3* pos)
-	{
-		Particle::pos = pos;
-	}
+	Particle(glm::vec3* pos) { Particle::pos = pos; }
 
 public:
 	void integrate(float dt)
@@ -22,25 +19,13 @@ public:
 		}
 	}
 
-	void resetForce()
-	{
-		force = glm::vec3(0.0f);
-	}
+	void resetForce() { force = glm::vec3(0.0f); }
 
-	void integrateAccel(float dt)
-	{
-		velocity += force * dt;
-	}
+	void integrateAccel(float dt) { velocity += force * dt; }
 
-	void integrateVelocity(float dt)
-	{
-		*pos += velocity * dt;
-	}
+	void integrateVelocity(float dt) { *pos += velocity * dt; }
 
-	void applyForce(glm::vec3 force)
-	{
-		Particle::force += force;
-	}
+	void applyForce(glm::vec3 force) { Particle::force += force; }
 
 	glm::vec3 getPos() { return *pos; }
 
