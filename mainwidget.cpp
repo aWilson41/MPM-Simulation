@@ -1,5 +1,6 @@
 #include "MainWidget.h"
 #include "Engine/ResourceLoader.h"
+#include "Engine/Geometry.h"
 
 #include <QMouseEvent>
 #include <QApplication>
@@ -29,23 +30,25 @@ void MainWidget::initializeGL()
 
 	srand(time(NULL));
 
-	// Create some random points in a box
-	std::vector<glm::vec3> pts = std::vector<glm::vec3>(1000);
-	int range = 200;
-	glm::vec3 translate = glm::vec3(0.0f, 50.0f, 0.0f);
-	for (UINT i = 0; i < 1000; i++)
+	// Create a polygon to randomely distribute points/particles in
+	geom::Poly circlePoly;
+	circlePoly.FromCircle(geom::Circle(0.0f, 50.0f, 100.0f), 25);
+	std::vector<glm::vec2> results = MathHelp::generatePointCloud(circlePoly, 200);
+	std::vector<glm::vec3> pts = std::vector<glm::vec3>(results.size());
+	// Convert the vec2 array to vec3
+	for (unsigned int i = 0; i < results.size(); i++)
 	{
-		pts[i] = glm::vec3(rand() % range, rand() % range, rand() % range) - glm::vec3(range) * 0.5f + translate;
+		pts[i] = glm::vec3(results[i], 0.0f);
 	}
 
 	ptCloud = new PointCloud();
 	ptCloud->setPoints(pts.data(), static_cast<UINT>(pts.size()));
-	ptCloud->world = mathHelper::matrixScale(1.0f);
+	ptCloud->world = MathHelp::matrixScale(1.0f);
 	ptCloud->setShaderProgram(&ptShader);
 
 	plane = new Plane();
 	plane->setShaderProgram(&normShader);
-	plane->world = mathHelper::matrixTranslate(0.0f, -85.0f, 0.0f) * mathHelper::matrixScale(1000.0f);
+	plane->world = MathHelp::matrixTranslate(0.0f, -85.0f, 0.0f) * MathHelp::matrixScale(1000.0f);
 	Material* planeMat = new Material();
 	planeMat->setDiffuse(0.2f, 0.4f, 0.2f);
 	planeMat->setAmbientToDiffuse(0.8f);
@@ -107,7 +110,7 @@ void MainWidget::wheelEvent(QWheelEvent* e)
 void MainWidget::mouseMoveEvent(QMouseEvent* e)
 {
 	// Get the new mouse position as vec2
-	glm::vec2 newMousePos = mathHelper::qPointToVec2(e->pos());
+	glm::vec2 newMousePos = MathHelp::qPointToVec2(e->pos());
 	if (e->buttons() == Qt::LeftButton)
 		updateCamera(newMousePos);
 	mousePos = newMousePos;
@@ -139,10 +142,7 @@ void MainWidget::updateCamera(glm::vec2 pos)
 	cam.updateLookAt();
 }
 
-void MainWidget::timerEvent(QTimerEvent* e)
-{
-	update();
-}
+void MainWidget::timerEvent(QTimerEvent* e) { update(); }
 
 
 void MainWidget::resizeGL(int w, int h)

@@ -5,10 +5,7 @@
 class Camera
 {
 public:
-	Camera()
-	{
-		reset();
-	}
+	Camera() { reset(); }
 
 	void reset();
 
