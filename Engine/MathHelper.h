@@ -11,6 +11,7 @@ const GLfloat HALFPI = PI * 0.5f;
 const GLfloat TWOPI = PI * 2.0f;
 const GLfloat TODEGREES = PI / 180.0f;
 const GLfloat TORADIANS = 180.0f / PI;
+const GLfloat BSPLINE_EPSILON = 1e-4f;
 
 // Forward declartions
 namespace geom
@@ -70,9 +71,15 @@ public:
 	static geom::Rect getBounds(glm::vec2* vertices, UINT count);
 
 	// Generates a point cloud in a polygon
-	static std::vector<glm::vec2> generatePointCloud(geom::Poly* poly, UINT numPts);
+	static std::vector<glm::vec2> generatePointCloud(geom::Poly* poly);
 
 	static bool isPointInPolygon(geom::Poly* poly, glm::vec2 pt);
 
 	static GLfloat polygonArea(geom::Poly* poly);
+
+	//Cubic B-spline shape/basis/interpolation function
+	//A smooth curve from (0,1) to (1,0)
+	static GLfloat bspline(GLfloat x);
+	// Slope of interpolation function
+	static GLfloat bsplineSlope(GLfloat x);
 };

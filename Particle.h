@@ -33,6 +33,8 @@ public:
 	bool isFixed = false;
 	// Pointer to external position (the particle doesn't hold the position, the dataset does)
 	glm::vec3* pos = nullptr;
+	glm::vec2 gridPos = glm::vec2(0.0f);
+	GLfloat mass = 0.0f;
 	glm::vec3 normal = glm::vec3(0.0f);
 	glm::vec3 force = glm::vec3(0.0f);
 	glm::vec3 velocity = glm::vec3(0.0f);

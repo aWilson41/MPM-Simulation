@@ -1,15 +1,16 @@
-#include "MainWidget.h"
-#include "Engine/ResourceLoader.h"
+#include "mainwidget.h"
 #include "Engine/Geometry.h"
+#include "Engine/Material.h"
+#include "Engine/PointCloud.h"
+#include "Engine/Primitives.h"
+#include "Engine/ResourceLoader.h"
+#include "Grid.h"
 #include "Particle.h"
-#include "Engine\Material.h"
-#include "Engine\PointCloud.h"
-#include "Engine\Primitives.h"
 
-#include <QMouseEvent>
+#include <math.h>
 #include <QApplication>
 #include <qdesktopwidget.h>
-#include <math.h>
+#include <QMouseEvent>
 
 MainWidget::MainWidget(QWidget* parent) : 
 	QOpenGLWidget(parent)
@@ -37,20 +38,23 @@ void MainWidget::initializeGL()
 	// Create a polygon to randomly distribute points/particles in
 	geom::Poly circlePoly;
 	circlePoly.FromCircle(geom::Circle(0.0f, 50.0f, 100.0f), 25);
-	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, 400);
+	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly);
 	std::vector<glm::vec3> pts = std::vector<glm::vec3>(results.size());
-	// Link up the particles
+	// Convert to vec3
 	for (UINT i = 0; i < results.size(); i++)
 	{
 		pts[i] = glm::vec3(results[i], 0.0f);
 	}
+
+	geom::Rect bounds = MathHelp::getBounds(results.data(), static_cast<UINT>(results.size()));
+	grid = new Grid(bounds.pos, 4.0f * bounds.extent, glm::vec2(64));
 
 	ptCloud = new PointCloud();
 	ptCloud->setPoints(pts.data(), static_cast<UINT>(pts.size()));
 	ptCloud->world = MathHelp::matrixScale(1.0f);
 	ptCloud->setShaderProgram(&ptShader);
 
-	// Create particles from the points
+	// Create particles from the points, link the position with the particle
 	for (UINT i = 0; i < ptCloud->pts.size(); i++)
 	{
 		Particle* particle = new Particle(&ptCloud->pts[i]);

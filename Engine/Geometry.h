@@ -48,6 +48,10 @@ namespace geom
 
 	public:
 		GLfloat area() override;
+		glm::vec2 topLeft();
+		glm::vec2 topRight();
+		glm::vec2 bottomRight();
+		glm::vec2 bottomLeft();
 
 	public:
 		glm::vec2 extent = glm::vec2(0.0f);

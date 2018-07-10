@@ -48,6 +48,10 @@ namespace geom
 		type = ShapeType::RECT;
 	}
 	GLfloat Rect::area() { return extent.x * extent.y * 2.0f; }
+	glm::vec2 Rect::topLeft() { return pos - extent; }
+	glm::vec2 Rect::topRight() { return pos + glm::vec2(extent.x, -extent.y); }
+	glm::vec2 Rect::bottomRight() { return pos + extent; }
+	glm::vec2 Rect::bottomLeft() { return pos + glm::vec2(-extent.x, extent.y); }
 
 	// Polygon
 	Poly::Poly() { type = ShapeType::POLY; }

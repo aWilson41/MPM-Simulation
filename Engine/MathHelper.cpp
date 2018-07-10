@@ -190,9 +190,12 @@ geom::Rect MathHelp::getBounds(glm::vec2* vertices, UINT count)
 	return geom::Rect(center, size);
 }
 
-std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly, UINT numPts)
+std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly)
 {
 	std::vector<glm::vec2> results;
+
+	const GLfloat ratio = 0.05f;
+	numPts = polygonArea(poly) * ratio;
 
 	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
 	glm::vec2 size = bounds.extent * 2.0f;
@@ -240,4 +243,31 @@ GLfloat MathHelp::polygonArea(geom::Poly* poly)
 	}
 	area += vertices[count - 1].x * vertices[0].y - vertices[0].x * vertices[count - 1].y;
 	return area * 0.5f;
+}
+
+GLfloat MathHelp::bspline(GLfloat x)
+{
+	x = fabs(x);
+	GLfloat w;
+	if (x < 1.0f)
+		w = x * x * (x / 2.0f - 1.0f) + 2.0f / 3.0f;
+	else if (x < 2.0f)
+		w = x * (x * (-x / 6.0f + 1.0f) - 2.0f) + 4.0f / 3.0f;
+	else
+		return 0.0f;
+	//Clamp between 0 and 1... if needed
+	if (w < BSPLINE_EPSILON)
+		return 0.0f;
+	return w;
+}
+GLfloat MathHelp::bsplineSlope(GLfloat x)
+{
+	GLfloat abs_x = fabs(x);
+	if (abs_x < 1.0f)
+		return 1.5f * x * abs_x - 2.0f * x;
+	else if (x < 2.0f)
+		return -x * abs_x / 2.0f + 2.0f * x - 2.0f * x / abs_x;
+	else
+		return 0.0f;
+	//Clamp between -2/3 and 2/3... if needed
 }
