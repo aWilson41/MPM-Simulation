@@ -47,7 +47,7 @@ void MainWidget::initializeGL()
 	}
 
 	geom::Rect bounds = MathHelp::getBounds(results.data(), static_cast<UINT>(results.size()));
-	grid = new Grid(bounds.pos, 4.0f * bounds.extent, glm::vec2(64));
+	grid = new Grid(bounds.pos, 2.0f * bounds.size(), glm::vec2(64));
 
 	ptCloud = new PointCloud();
 	ptCloud->setPoints(pts.data(), static_cast<UINT>(pts.size()));
@@ -57,9 +57,11 @@ void MainWidget::initializeGL()
 	// Create particles from the points, link the position with the particle
 	for (UINT i = 0; i < ptCloud->pts.size(); i++)
 	{
-		Particle* particle = new Particle(&ptCloud->pts[i]);
+		Particle particle(&ptCloud->pts[i]);
 		particles.push_back(particle);
 	}
+	grid->initMass(particles.data(), static_cast<UINT>(particles.size()));
+	grid->calcParticleVolume(particles.data(), static_cast<UINT>(particles.size()));
 
 	plane = new Plane();
 	plane->setShaderProgram(&normShader);
@@ -164,9 +166,13 @@ void MainWidget::timerEvent(QTimerEvent* e)
 	float dt = 0.05f;
 	for (UINT i = 0; i < particles.size(); i++)
 	{
-		particles[i]->applyForce(glm::vec3(0.0f, -9.8f, 0.0f));
-		particles[i]->integrate(dt);
-		particles[i]->resetForce();
+		grid->initMass(particles.data(), static_cast<UINT>(particles.size()));
+		grid->initVelocities(particles.data(), static_cast<UINT>(particles.size()));
+		grid->computeVelocities(particles.data(), static_cast<UINT>(particles.size()), glm::vec2(0.0f, -9.8f));
+
+		/*particles[i].applyForce(glm::vec3(0.0f, -9.8f, 0.0f));
+		particles[i].integrate(dt);
+		particles[i].resetForce();*/
 	}
 	ptCloud->updateBuffer();
 }
@@ -196,19 +202,12 @@ void MainWidget::paintGL()
 
 	ptShader.bind();
 	glUniform3f(ptShader.uniformLocation("lightDir"), lightDir.x, lightDir.y, lightDir.z);
-	ptCloud->Draw(viewProj);
+	ptCloud->draw(viewProj);
 	ptShader.release();
 }
 
 MainWidget::~MainWidget()
 {
-	// Delete the particles
-	for (UINT i = 0; i < particles.size(); i++)
-	{
-		if (particles[i] != nullptr)
-			delete particles[i];
-	}
-
 	// Delete the materials
 	for (UINT i = 0; i < materials.size(); i++)
 	{

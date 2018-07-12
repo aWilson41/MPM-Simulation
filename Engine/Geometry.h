@@ -52,6 +52,7 @@ namespace geom
 		glm::vec2 topRight();
 		glm::vec2 bottomRight();
 		glm::vec2 bottomLeft();
+		glm::vec2 size();
 
 	public:
 		glm::vec2 extent = glm::vec2(0.0f);

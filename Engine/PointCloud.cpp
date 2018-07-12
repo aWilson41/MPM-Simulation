@@ -44,7 +44,7 @@ void PointCloud::updateBuffer()
 	vertexBuffer->release();
 }
 
-void PointCloud::Draw(glm::mat4 viewProj)
+void PointCloud::draw(glm::mat4 viewProj)
 {
 	//glEnable(GL_PROGRAM_POINT_SIZE);
 	//glPointSize(10);

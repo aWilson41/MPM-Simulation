@@ -195,7 +195,7 @@ std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly)
 	std::vector<glm::vec2> results;
 
 	const GLfloat ratio = 0.05f;
-	numPts = polygonArea(poly) * ratio;
+	UINT numPts = polygonArea(poly) * ratio;
 
 	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
 	glm::vec2 size = bounds.extent * 2.0f;

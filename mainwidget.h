@@ -45,7 +45,7 @@ private:
 	PointCloud* ptCloud = nullptr;
 	Grid* grid = nullptr;
 	std::vector<Material*> materials;
-	std::vector<Particle*> particles;
+	std::vector<Particle> particles;
 
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
 

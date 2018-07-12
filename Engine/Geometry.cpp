@@ -52,6 +52,7 @@ namespace geom
 	glm::vec2 Rect::topRight() { return pos + glm::vec2(extent.x, -extent.y); }
 	glm::vec2 Rect::bottomRight() { return pos + extent; }
 	glm::vec2 Rect::bottomLeft() { return pos + glm::vec2(-extent.x, extent.y); }
+	glm::vec2 Rect::size() { return extent * 2.0f; }
 
 	// Polygon
 	Poly::Poly() { type = ShapeType::POLY; }

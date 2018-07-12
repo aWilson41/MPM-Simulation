@@ -17,7 +17,7 @@ public:
 	// Updates the full buffer
 	void updateBuffer();
 
-	void Draw(glm::mat4 viewProj);
+	void draw(glm::mat4 viewProj);
 
 public:
 	glm::mat4 world = glm::mat4(1.0f);
