@@ -271,3 +271,73 @@ GLfloat MathHelp::bsplineSlope(GLfloat x)
 		return 0.0f;
 	//Clamp between -2/3 and 2/3... if needed
 }
+
+void MathHelp::setIdentity(glm::mat2x2& m)
+{
+	m[0][0] = m[1][1] = 1.0f;
+	m[0][1] = m[1][0] = 0.0f;
+}
+
+void MathHelp::setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11)
+{
+	m[0][0] = m00;
+	m[0][1] = m01;
+	m[1][0] = m10;
+	m[1][1] = m11;
+}
+
+void MathHelp::svd(glm::mat2x2 source, glm::mat2x2* w, glm::vec2* e, glm::mat2x2* v)
+{
+	/* Probably not the fastest, but I can't find any simple algorithms
+	Got most of the derivation from:
+	http://www.ualberta.ca/~mlipsett/ENGM541/Readings/svd_ellis.pdf
+	www.imm.dtu.dk/pubdb/views/edoc_download.php/3274/pdf/imm3274.pdf
+	https://github.com/victorliu/Cgeom/blob/master/geom_la.c (geom_matsvd2d method)
+	*/
+	// If it is diagonal, SVD is trivial
+	if (fabs(source[0][1] - source[1][0]) < MATRIX_EPSILON && fabs(source[0][1]) < MATRIX_EPSILON)
+	{
+		MathHelp::setData(*w, source[0][0] < 0 ? -1 : 1, 0, 0, source[1][1] < 0 ? -1 : 1);
+		e->x = fabs(source[0][0]);
+		e->y = fabs(source[1][1]);
+		MathHelp::setIdentity(*v);
+	}
+	// Otherwise, we need to compute A^T*A
+	else
+	{
+		GLfloat j = source[0][0] * source[0][0] + source[0][1] * source[0][1];
+		GLfloat k = source[1][0] * source[1][0] + source[1][1] * source[1][1];
+		GLfloat v_c = source[0][0] * source[1][0] + source[0][1] * source[1][1];
+
+		// Check to see if A^T*A is diagonal
+		if (fabs(v_c) < MATRIX_EPSILON)
+		{
+			e->x = sqrt(j);
+			e->y = fabs(j - k) < MATRIX_EPSILON ? e->x : sqrt(k);
+			MathHelp::setIdentity(*v);
+			MathHelp::setData(*w, source[0][0] / e->x, source[1][0] / e->y, source[0][1] / e->x, source[1][1] / e->y);
+		}
+		// Otherwise, solve quadratic for eigenvalues
+		else
+		{
+			GLfloat jmk = j - k;
+			GLfloat jpk = j + k;
+			GLfloat root = sqrt(jmk*jmk + 4.0f * v_c*v_c);
+			GLfloat eig = (jpk + root) * 0.5f;
+			e->x = sqrt(eig);
+			e->y = fabs(root) < MATRIX_EPSILON ? e->x : sqrt((jpk - root) * 0.5f);
+			// Use eigenvectors of A^T*A as V
+			GLfloat v_s = eig - j;
+			GLfloat len = sqrt(v_s*v_s + v_c * v_c);
+			v_c /= len;
+			v_s /= len;
+			MathHelp::setData(*v, v_c, -v_s, v_s, v_c);
+			// Compute w matrix as Av/s
+			MathHelp::setData(*w, 
+				(source[0][0] * v_c + source[1][0] * v_s) / e->x,
+				(source[1][0] * v_c - source[0][0] * v_s) / e->y,
+				(source[0][1] * v_c + source[1][1] * v_s) / e->x,
+				(source[1][1] * v_c - source[0][1] * v_s) / e->y);
+		}
+	}
+}

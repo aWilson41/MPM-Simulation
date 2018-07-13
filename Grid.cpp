@@ -1,6 +1,8 @@
 #include "Grid.h"
 #include "Particle.h"
 
+static const GLfloat FLIP_PERCENT = 0.95f;
+
 Grid::Grid(glm::vec2 pos, glm::vec2 size, glm::vec2 dim)
 {
 	bounds = geom::Rect(pos, size);
@@ -8,6 +10,8 @@ Grid::Grid(glm::vec2 pos, glm::vec2 size, glm::vec2 dim)
 	cellArea = cellSize.x * cellSize.y;
 	gridWidth = static_cast<UINT>(dim.x);
 	gridHeight = static_cast<UINT>(dim.y);
+	nodeCount = gridWidth * gridHeight;
+	nodes = new GridNode[nodeCount];
 }
 
 
@@ -15,7 +19,8 @@ void Grid::calcParticleVolume(Particle* particles, UINT particleCount)
 {
 	for (UINT i = 0; i < particleCount; i++)
 	{
-
+		Particle* p = &particles[i];
+		unplotParticleVolume(p);
 	}
 }
 
@@ -53,26 +58,88 @@ void Grid::initVelocities(Particle* particles, UINT particleCount)
 	}
 }
 
-void Grid::computeVelocities(Particle* particles, UINT particleCount, glm::vec2 explicitForce)
+void Grid::computeVelocities(Particle* particles, UINT particleCount, glm::vec2 explicitForce, GLfloat dt)
 {
 	// First find the velocity gradient for every particle
-	for (unsigned int i = 0; i < particleCount; i++)
+	for (UINT i = 0; i < particleCount; i++)
 	{
 		Particle* p = &particles[i];
 		calcParticleVelocityGradient(p);
+	}
+
+	//Now we have all grid forces, compute velocities (euler integration)
+	for (UINT i = 0; i < nodeCount; i++)
+	{
+		GridNode& node = nodes[i];
+		if (node.active)
+			node.newVelocity = node.velocity + dt * (explicitForce - node.newVelocity / node.mass);
+	}
+}
+
+void Grid::updateVelocities(Particle* particles, UINT particleCount)
+{
+	for (UINT i = 0; i < particleCount; i++)
+	{
+		Particle* p = &particles[i];
+		// We calculate PIC and FLIP velocities separately
+		glm::vec2 pic;
+		glm::vec2 flip = p->velocity;
+		// Also keep track of velocity gradient
+		glm::mat2x2& vGrad = p->velocityGradient;
+		vGrad[0][0] = vGrad[0][1] = vGrad[1][0] = vGrad[1][1] = 0.0f;
+		// VISUALIZATION PURPOSES ONLY:
+		// Recompute density
+		p->density = 0.0f;
+		UINT ox = p->gridPos.x;
+		UINT oy = p->gridPos.y;
+		for (int i = -1; i < 2; i++)
+		{
+			int x = static_cast<UINT>(p->gridPos.x) + i;
+			GLfloat wy = MathHelp::bspline(i);
+			GLfloat dy = MathHelp::bsplineSlope(i);
+			for (int j = -1; j < 2; j++)
+			{
+				int y = static_cast<UINT>(p->gridPos.y) + j;
+				GLfloat wx = MathHelp::bspline(j);
+				GLfloat dx = MathHelp::bsplineSlope(j);
+				
+				GLfloat weight = wx * wy;
+				if (weight > 1e-4)
+				{
+					glm::vec2 gradientWeight = glm::vec2(dx * wy, wx * dy) / cellSize;
+					UINT index = y * gridWidth + x;
+					GridNode* node = &nodes[index];
+					// Particle in cell
+					pic += node->newVelocity * weight;
+					// Fluid implicit particle
+					flip += (node->newVelocity - node->velocity) * weight;
+					// Velocity gradient
+					vGrad += glm::outerProduct(node->newVelocity, gradientWeight);
+					// VISUALIZATION ONLY: Update density
+					p->density += weight * node->mass;
+				}
+			}
+		}
+
+		// Final velocity is a linear combination of PIC and FLIP components
+		glm::vec2 v = flip * FLIP_PERCENT + pic * (1.0f - FLIP_PERCENT);
+		p->velocity = glm::vec3(v.x, v.y, 0.0f);
+		// VISUALIZATION: Update density
+		p->density /= cellArea;
 	}
 }
 
 
 void Grid::unplotParticleVolume(Particle* p)
 {
-	for (UINT i = -1; i < 2; i++)
+	p->density = 0.0f;
+	for (int i = -1; i < 2; i++)
 	{
-		UINT x = static_cast<UINT>(p->gridPos.x) + i;
+		int x = static_cast<UINT>(p->gridPos.x) + i;
 		GLfloat wy = MathHelp::bspline(i);
-		for (UINT j = -1; j < 2; j++)
+		for (int j = -1; j < 2; j++)
 		{
-			UINT y = static_cast<UINT>(p->gridPos.y) + j;
+			int y = static_cast<UINT>(p->gridPos.y) + j;
 			GLfloat wx = MathHelp::bspline(j);
 
 			GLfloat weight = wx * wy;
@@ -90,14 +157,14 @@ void Grid::unplotParticleVolume(Particle* p)
 void Grid::plotParticleMass(Particle* p)
 {
 	// The plotting takes place over a 2x2 square for each particle
-	for (UINT i = -1; i < 2; i++)
+	for (int i = -1; i < 2; i++)
 	{
-		UINT x = static_cast<UINT>(p->gridPos.x) + i;
+		int x = static_cast<UINT>(p->gridPos.x) + i;
 		GLfloat wy = MathHelp::bspline(i);
 		GLfloat dy = MathHelp::bsplineSlope(i);
-		for (UINT j = -1; j < 2; j++)
+		for (int j = -1; j < 2; j++)
 		{
-			UINT y = static_cast<UINT>(p->gridPos.y) + j;
+			int y = static_cast<UINT>(p->gridPos.y) + j;
 			GLfloat wx = MathHelp::bspline(j);
 			GLfloat dx = MathHelp::bsplineSlope(j);
 
@@ -111,14 +178,14 @@ void Grid::plotParticleMass(Particle* p)
 void Grid::plotParticleVelocity(Particle* p)
 {
 	// The plotting takes place over a 2x2 square for each particle
-	for (UINT i = -1; i < 2; i++)
+	for (int i = -1; i < 2; i++)
 	{
-		UINT x = static_cast<UINT>(p->gridPos.x) + i;
+		int x = static_cast<UINT>(p->gridPos.x) + i;
 		GLfloat wy = MathHelp::bspline(i);
 		//GLfloat dy = MathHelp::bsplineSlope(i);
-		for (UINT j = -1; j < 2; j++)
+		for (int j = -1; j < 2; j++)
 		{
-			UINT y = static_cast<UINT>(p->gridPos.y) + j;
+			int y = static_cast<UINT>(p->gridPos.y) + j;
 			GLfloat wx = MathHelp::bspline(j);
 			//GLfloat dx = MathHelp::bsplineSlope(j);
 
@@ -134,19 +201,21 @@ void Grid::plotParticleVelocity(Particle* p)
 
 void Grid::calcParticleVelocityGradient(Particle* p)
 {
-	for (UINT i = -1; i < 2; i++)
+	glm::mat2x2 energy = p->getForce();
+	for (int i = -1; i < 2; i++)
 	{
-		UINT x = static_cast<UINT>(p->gridPos.x) + i;
+		int x = static_cast<UINT>(p->gridPos.x) + i;
 		GLfloat wy = MathHelp::bspline(i);
 		GLfloat dy = MathHelp::bsplineSlope(i);
-		for (UINT j = -1; j < 2; j++)
+		for (int j = -1; j < 2; j++)
 		{
-			UINT y = static_cast<UINT>(p->gridPos.y) + j;
+			int y = static_cast<UINT>(p->gridPos.y) + j;
 			GLfloat wx = MathHelp::bspline(j);
 			GLfloat dx = MathHelp::bsplineSlope(j);
+			glm::vec2 gradientWeight = glm::vec2(dx * wy, wx * dy) / cellSize;
 
-			/*if (wx * wy > 1e-4)
-				nodes[y * gridWidth + x].newVelocity*/
+			if (wx * wy > 1e-4)
+				nodes[y * gridWidth + x].newVelocity += energy * gradientWeight;
 		}
 	}
 }

@@ -46,7 +46,10 @@ public:
 	void initVelocities(Particle* particles, UINT particleCount);
 
 	// Computes the velocities of the grid nodes
-	void computeVelocities(Particle* particles, UINT particleCount, glm::vec2 explicitForce);
+	void computeVelocities(Particle* particles, UINT particleCount, glm::vec2 explicitForce, GLfloat dt);
+
+	// Maps the new velocities back to the particles
+	void updateVelocities(Particle* particles, UINT particleCount);
 
 private:
 	void unplotParticleVolume(Particle* particle);
