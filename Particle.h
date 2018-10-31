@@ -1,71 +1,60 @@
 #pragma once
-
-#include "Engine\MathHelper.h"
-
-static const GLfloat HARDENING = 5.0f;
+#include "Constants.h"
+#include "Engine/MathHelper.h"
 
 class Particle
 {
 public:
-	Particle() { }
-	Particle(glm::vec3* pos, GLfloat lambda, GLfloat mu)
+	Particle() { };
+	Particle(glm::vec3* pos, GLfloat mass)
 	{
 		Particle::pos = pos;
-		Particle::lambda = lambda;
-		Particle::mu = mu;
-		defElastic = glm::mat2x2(1.0f);
-		defPlastic = glm::mat2x2(1.0f);
-		svd_w = glm::mat2x2(1.0f);
-		svd_v = glm::mat2x2(1.0f);
-		svd_e = glm::vec2(1.0f, 1.0f);
+		Particle::mass = mass;
 	}
 
-public:
-	/*void integrate(float dt)
+	void updatePos(GLfloat dt) { *pos += velocity * dt; }
+	void updateGradient(GLfloat dt) { defG = (I + vG * dt) * defG; }
+	// Energy derivative
+	const glm::mat2 calcStVenantPK2Stress()
 	{
-		if (!isFixed)
-		{
-			integrateAccel(dt);
-			integrateVelocity(dt);
-		}
+		glm::mat2 greenStrain = (glm::transpose(defG) * defG - I) * 0.5f;
+		return bulk * MathHelp::trace(greenStrain) * I + 2.0f * shear * greenStrain;
+	}
+	const glm::mat2 calcModifiedStVenantPK2Stress()
+	{
+		GLfloat detF = glm::determinant(defG);
+		glm::mat2 defGNorm = defG * (1.0f / std::sqrt(detF));
+		glm::mat2 isochoricGreenStrain = (glm::transpose(defGNorm) * defGNorm - I) * 0.5f;
+		return bulk * (detF - 1.0f) * I + 2.0f * shear * isochoricGreenStrain;
+	}
+	const glm::mat2 calcLinearPK2Stress()
+	{
+		// Green strain reduces to this for small strains
+		glm::mat2 strain = (glm::transpose(defG) + defG) * 0.5f - I;
+		return 2.0f * bulk * strain + shear * MathHelp::trace(strain) * I;
 	}
 
-	void resetForce() { force = glm::vec3(0.0f); }
+	// Converts PK2 to cauchy
+	const glm::mat2 calcCauchyStress()
+	{
+		const GLfloat J = glm::determinant(defG);
+		return (1.0f / J) * calcStVenantPK2Stress() * glm::transpose(defG);
+		//return (1.0f / J) * calcModifiedStVenantPK2Stress() * glm::transpose(defG);
+	}
 
-	void integrateAccel(float dt) { velocity += force * dt; }
-
-	void integrateVelocity(float dt) { *pos += velocity * dt; }
-
-	void applyForce(glm::vec3 force) { Particle::force += force; }*/
-
-	glm::vec3 getPos() { return *pos; }
-
-	glm::mat2x2 getForce();
-	//Update position, based on velocity
-	void updatePos(GLfloat dt);
-	//Update deformation gradient
-	void updateGradient(GLfloat dt);
-	void applyPlasticity();
+	glm::vec2 getPos() { return glm::vec2(pos->x, pos->y); }
 
 public:
-	bool isFixed = false;
-	// Pointer to external position (the particle doesn't hold the position, the dataset does)
-	glm::vec3* pos = nullptr;
-	glm::vec2 gridPos = glm::vec2(0.0f);
-	GLfloat mass = 1.0f;
-	GLfloat density = 0.0f;
 	GLfloat volume = 0.0f;
-	glm::vec3 velocity = glm::vec3(0.0f);
-	glm::mat2x2 velocityGradient = glm::mat2x2(1.0f);
+	GLfloat mass = 0.0f;
+	GLfloat density = 0.0f;
+	GLfloat bulk = 400.0f;
+	GLfloat shear = 600.0f;
+	glm::vec3* pos = nullptr;// glm::vec2(0.0f);
+	glm::vec2 velocity = glm::vec2(0.0f);
+	glm::mat2 defG = I; // deformation gradient
+	glm::mat2 vG = glm::mat2(0.0f); // Velocity gradient
 
-	//Lame parameters (_s denotes starting configuration)
-	GLfloat lambda = 0.0f;
-	GLfloat mu = 0.0f;
-	//Deformation gradient (elastic and plastic parts)
-	glm::mat2x2 defElastic;
-	glm::mat2x2 defPlastic;
-	//Cached SVD's for elastic deformation gradient
-	glm::mat2x2 svd_w;
-	glm::mat2x2 svd_v;
-	glm::vec2 svd_e;
+	int gridPosX;
+	int gridPosY;
 };

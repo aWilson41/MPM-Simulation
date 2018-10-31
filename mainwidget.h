@@ -6,7 +6,7 @@
 #include <QBasicTimer>
 #include <QOpenGLShaderProgram>
 
-class Grid;
+class MPMGrid;
 class Material;
 class Particle;
 class Plane;
@@ -43,7 +43,7 @@ private:
 
 	Plane* plane = nullptr;
 	PointCloud* ptCloud = nullptr;
-	Grid* grid = nullptr;
+	MPMGrid* mpmGrid = nullptr;
 	std::vector<Material*> materials;
 	std::vector<Particle> particles;
 

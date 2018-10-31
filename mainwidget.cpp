@@ -4,16 +4,13 @@
 #include "Engine/PointCloud.h"
 #include "Engine/Primitives.h"
 #include "Engine/ResourceLoader.h"
-#include "Grid.h"
+#include "MPMGrid.h"
 #include "Particle.h"
 
 #include <math.h>
 #include <QApplication>
 #include <qdesktopwidget.h>
 #include <QMouseEvent>
-
-static const GLfloat YOUNGS_MODULUS = 1.5e5f;
-static const GLfloat POISSONS_RATIO = 0.2f;
 
 MainWidget::MainWidget(QWidget* parent) : 
 	QOpenGLWidget(parent)
@@ -32,17 +29,15 @@ void MainWidget::initializeGL()
 {
 	initializeOpenGLFunctions();
 	glEnable(GL_PROGRAM_POINT_SIZE);
-
 	glClearColor(0.4f, 0.58f, 0.9f, 1.0f);
 	initShaders();
 
-	srand(time(NULL));
-
 #pragma region Create Snow Shape and Point Cloud
-	// Create a polygon to randomly distribute points/particles in
+	// Create a 2d polygon to randomly distribute points/particles in
 	geom::Poly circlePoly;
 	circlePoly.FromCircle(geom::Circle(0.0f, 50.0f, 100.0f), 25);
-	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly);
+	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
+	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, circlePoly.area() / particleArea);
 	std::vector<glm::vec3> pts = std::vector<glm::vec3>(results.size());
 	// Convert to vec3
 	for (UINT i = 0; i < results.size(); i++)
@@ -51,7 +46,8 @@ void MainWidget::initializeGL()
 	}
 
 	geom::Rect bounds = MathHelp::getBounds(results.data(), static_cast<UINT>(results.size()));
-	grid = new Grid(bounds.pos, 2.0f * bounds.size(), glm::vec2(64));
+	mpmGrid = new MPMGrid();
+	mpmGrid->initGrid(bounds.pos, 2.0f * bounds.size(), 64, 64);
 
 	ptCloud = new PointCloud();
 	ptCloud->setPoints(pts.data(), static_cast<UINT>(pts.size()));
@@ -60,18 +56,16 @@ void MainWidget::initializeGL()
 #pragma endregion
 
 #pragma region Init Particles
-	//Lame parameters
-	const GLfloat lambda = YOUNGS_MODULUS * POISSONS_RATIO / ((1.0f + POISSONS_RATIO) * (1.0f - 2.0f * POISSONS_RATIO));
-	const GLfloat mu = YOUNGS_MODULUS / (2.0f + 2.0f * POISSONS_RATIO);
-
 	// Create particles from the points, link the position with the particle
+	// This way points exist sequentially in point clouds array to easily get to the gpu
 	for (UINT i = 0; i < ptCloud->pts.size(); i++)
 	{
-		Particle particle(&ptCloud->pts[i], lambda, mu);
+		Particle particle(&ptCloud->pts[i], PARTICLE_MASS);
 		particles.push_back(particle);
 	}
-	grid->initMass(particles.data(), static_cast<UINT>(particles.size()));
-	grid->calcParticleVolume(particles.data(), static_cast<UINT>(particles.size()));
+
+	//mpmGrid->initMass(particles.data(), static_cast<UINT>(particles.size()));
+	//mpmGrid->calcParticleVolume(particles.data(), static_cast<UINT>(particles.size()));
 #pragma endregion
 
 	plane = new Plane();
@@ -177,23 +171,23 @@ void MainWidget::timerEvent(QTimerEvent* e)
 	float dt = 0.05f;
 	for (UINT i = 0; i < particles.size(); i++)
 	{
-		grid->initMass(particles.data(), static_cast<UINT>(particles.size()));
-		grid->initVelocities(particles.data(), static_cast<UINT>(particles.size()));
-		grid->computeVelocities(particles.data(), static_cast<UINT>(particles.size()), glm::vec2(0.0f, -9.8f), dt);
-		grid->updateVelocities(particles.data(), static_cast<UINT>(particles.size()));
+		//grid->initMass(particles.data(), static_cast<UINT>(particles.size()));
+		//grid->initVelocities(particles.data(), static_cast<UINT>(particles.size()));
+		//grid->computeVelocities(particles.data(), static_cast<UINT>(particles.size()), glm::vec2(0.0f, -9.8f), dt);
+		//grid->updateVelocities(particles.data(), static_cast<UINT>(particles.size()));
 
-		//max_velocity = 0;
-		for (UINT i = 0; i < particles.size(); i++)
-		{
-			particles[i].updatePos(dt);
-			particles[i].updateGradient(dt);
-			particles[i].applyPlasticity();
-			//Update max velocity, if needed
-			/*glm::s
-			float vel = particles[i].velocity();*/
-			/*if (vel > max_velocity)
-				max_velocity = vel;*/
-		}
+		////max_velocity = 0;
+		//for (UINT i = 0; i < particles.size(); i++)
+		//{
+		//	particles[i].updatePos(dt);
+		//	particles[i].updateGradient(dt);
+		//	particles[i].applyPlasticity();
+		//	//Update max velocity, if needed
+		//	/*glm::s
+		//	float vel = particles[i].velocity();*/
+		//	/*if (vel > max_velocity)
+		//		max_velocity = vel;*/
+		//}
 
 		/*particles[i].applyForce(glm::vec3(0.0f, -9.8f, 0.0f));
 		particles[i].integrate(dt);

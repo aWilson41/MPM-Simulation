@@ -1,5 +1,6 @@
 #include "MathHelper.h"
 #include "Geometry.h"
+#include <random>
 
 glm::mat4 MathHelp::matrixRotateX(GLfloat radians)
 {
@@ -190,7 +191,7 @@ geom::Rect MathHelp::getBounds(glm::vec2* vertices, UINT count)
 	return geom::Rect(center, size);
 }
 
-std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly)
+std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly, UINT ptCount)
 {
 	std::vector<glm::vec2> results;
 
@@ -200,13 +201,16 @@ std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly)
 	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
 	glm::vec2 size = bounds.extent * 2.0f;
 
+	UINT maxUint = std::numeric_limits<UINT>::max();
+	std::uniform_int_distribution<std::mt19937::result_type> random(0, maxUint);
+	std::mt19937 rng = std::mt19937(time(NULL));
 	while (results.size() < numPts)
 	{
 		// Generate a random point
 		// Generate random in 0, 1000
-		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(rand() % 1000), static_cast<GLfloat>(rand() % 1000));
+		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(random(rng), static_cast<GLfloat>(random(rng))));
 		// Change random to [-1, 1]
-		newPt = newPt / 500.0f - 1.0f;
+		newPt = newPt / (maxUint * 0.5f) - 1.0f;
 		// Change random to [-(width or height) / 2, (width or height) / 2] and add center
 		newPt = newPt * bounds.extent + bounds.pos;
 
@@ -245,37 +249,14 @@ GLfloat MathHelp::polygonArea(geom::Poly* poly)
 	return area * 0.5f;
 }
 
-GLfloat MathHelp::bspline(GLfloat x)
+glm::mat2 MathHelp::outer(glm::vec2 a, glm::vec2 b)
 {
-	x = fabs(x);
-	GLfloat w;
-	if (x < 1.0f)
-		w = x * x * (x / 2.0f - 1.0f) + 2.0f / 3.0f;
-	else if (x < 2.0f)
-		w = x * (x * (-x / 6.0f + 1.0f) - 2.0f) + 4.0f / 3.0f;
-	else
-		return 0.0f;
-	//Clamp between 0 and 1... if needed
-	if (w < BSPLINE_EPSILON)
-		return 0.0f;
-	return w;
-}
-GLfloat MathHelp::bsplineSlope(GLfloat x)
-{
-	GLfloat abs_x = fabs(x);
-	if (abs_x < 1.0f)
-		return 1.5f * x * abs_x - 2.0f * x;
-	else if (x < 2.0f)
-		return -x * abs_x / 2.0f + 2.0f * x - 2.0f * x / abs_x;
-	else
-		return 0.0f;
-	//Clamp between -2/3 and 2/3... if needed
-}
-
-void MathHelp::setIdentity(glm::mat2x2& m)
-{
-	m[0][0] = m[1][1] = 1.0f;
-	m[0][1] = m[1][0] = 0.0f;
+	glm::mat2 results;
+	results[0][0] = a.x * b.x;
+	results[0][1] = a.y * b.x;
+	results[1][0] = a.x * b.y;
+	results[1][1] = a.y * b.y;
+	return results;
 }
 
 void MathHelp::setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11)
@@ -286,58 +267,58 @@ void MathHelp::setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GL
 	m[1][1] = m11;
 }
 
-void MathHelp::svd(glm::mat2x2 source, glm::mat2x2* w, glm::vec2* e, glm::mat2x2* v)
-{
-	/* Probably not the fastest, but I can't find any simple algorithms
-	Got most of the derivation from:
-	http://www.ualberta.ca/~mlipsett/ENGM541/Readings/svd_ellis.pdf
-	www.imm.dtu.dk/pubdb/views/edoc_download.php/3274/pdf/imm3274.pdf
-	https://github.com/victorliu/Cgeom/blob/master/geom_la.c (geom_matsvd2d method)
-	*/
-	// If it is diagonal, SVD is trivial
-	if (fabs(source[0][1] - source[1][0]) < MATRIX_EPSILON && fabs(source[0][1]) < MATRIX_EPSILON)
-	{
-		MathHelp::setData(*w, source[0][0] < 0 ? -1 : 1, 0, 0, source[1][1] < 0 ? -1 : 1);
-		e->x = fabs(source[0][0]);
-		e->y = fabs(source[1][1]);
-		MathHelp::setIdentity(*v);
-	}
-	// Otherwise, we need to compute A^T*A
-	else
-	{
-		GLfloat j = source[0][0] * source[0][0] + source[0][1] * source[0][1];
-		GLfloat k = source[1][0] * source[1][0] + source[1][1] * source[1][1];
-		GLfloat v_c = source[0][0] * source[1][0] + source[0][1] * source[1][1];
-
-		// Check to see if A^T*A is diagonal
-		if (fabs(v_c) < MATRIX_EPSILON)
-		{
-			e->x = sqrt(j);
-			e->y = fabs(j - k) < MATRIX_EPSILON ? e->x : sqrt(k);
-			MathHelp::setIdentity(*v);
-			MathHelp::setData(*w, source[0][0] / e->x, source[1][0] / e->y, source[0][1] / e->x, source[1][1] / e->y);
-		}
-		// Otherwise, solve quadratic for eigenvalues
-		else
-		{
-			GLfloat jmk = j - k;
-			GLfloat jpk = j + k;
-			GLfloat root = sqrt(jmk*jmk + 4.0f * v_c*v_c);
-			GLfloat eig = (jpk + root) * 0.5f;
-			e->x = sqrt(eig);
-			e->y = fabs(root) < MATRIX_EPSILON ? e->x : sqrt((jpk - root) * 0.5f);
-			// Use eigenvectors of A^T*A as V
-			GLfloat v_s = eig - j;
-			GLfloat len = sqrt(v_s*v_s + v_c * v_c);
-			v_c /= len;
-			v_s /= len;
-			MathHelp::setData(*v, v_c, -v_s, v_s, v_c);
-			// Compute w matrix as Av/s
-			MathHelp::setData(*w, 
-				(source[0][0] * v_c + source[1][0] * v_s) / e->x,
-				(source[1][0] * v_c - source[0][0] * v_s) / e->y,
-				(source[0][1] * v_c + source[1][1] * v_s) / e->x,
-				(source[1][1] * v_c - source[0][1] * v_s) / e->y);
-		}
-	}
-}
+//void MathHelp::svd(glm::mat2x2 source, glm::mat2x2* w, glm::vec2* e, glm::mat2x2* v)
+//{
+//	/* Probably not the fastest, but I can't find any simple algorithms
+//	Got most of the derivation from:
+//	http://www.ualberta.ca/~mlipsett/ENGM541/Readings/svd_ellis.pdf
+//	www.imm.dtu.dk/pubdb/views/edoc_download.php/3274/pdf/imm3274.pdf
+//	https://github.com/victorliu/Cgeom/blob/master/geom_la.c (geom_matsvd2d method)
+//	*/
+//	// If it is diagonal, SVD is trivial
+//	if (fabs(source[0][1] - source[1][0]) < MATRIX_EPSILON && fabs(source[0][1]) < MATRIX_EPSILON)
+//	{
+//		MathHelp::setData(*w, source[0][0] < 0 ? -1 : 1, 0, 0, source[1][1] < 0 ? -1 : 1);
+//		e->x = fabs(source[0][0]);
+//		e->y = fabs(source[1][1]);
+//		MathHelp::setIdentity(*v);
+//	}
+//	// Otherwise, we need to compute A^T*A
+//	else
+//	{
+//		GLfloat j = source[0][0] * source[0][0] + source[0][1] * source[0][1];
+//		GLfloat k = source[1][0] * source[1][0] + source[1][1] * source[1][1];
+//		GLfloat v_c = source[0][0] * source[1][0] + source[0][1] * source[1][1];
+//
+//		// Check to see if A^T*A is diagonal
+//		if (fabs(v_c) < MATRIX_EPSILON)
+//		{
+//			e->x = sqrt(j);
+//			e->y = fabs(j - k) < MATRIX_EPSILON ? e->x : sqrt(k);
+//			MathHelp::setIdentity(*v);
+//			MathHelp::setData(*w, source[0][0] / e->x, source[1][0] / e->y, source[0][1] / e->x, source[1][1] / e->y);
+//		}
+//		// Otherwise, solve quadratic for eigenvalues
+//		else
+//		{
+//			GLfloat jmk = j - k;
+//			GLfloat jpk = j + k;
+//			GLfloat root = sqrt(jmk*jmk + 4.0f * v_c*v_c);
+//			GLfloat eig = (jpk + root) * 0.5f;
+//			e->x = sqrt(eig);
+//			e->y = fabs(root) < MATRIX_EPSILON ? e->x : sqrt((jpk - root) * 0.5f);
+//			// Use eigenvectors of A^T*A as V
+//			GLfloat v_s = eig - j;
+//			GLfloat len = sqrt(v_s*v_s + v_c * v_c);
+//			v_c /= len;
+//			v_s /= len;
+//			MathHelp::setData(*v, v_c, -v_s, v_s, v_c);
+//			// Compute w matrix as Av/s
+//			MathHelp::setData(*w, 
+//				(source[0][0] * v_c + source[1][0] * v_s) / e->x,
+//				(source[1][0] * v_c - source[0][0] * v_s) / e->y,
+//				(source[0][1] * v_c + source[1][1] * v_s) / e->x,
+//				(source[1][1] * v_c - source[0][1] * v_s) / e->y);
+//		}
+//	}
+//}

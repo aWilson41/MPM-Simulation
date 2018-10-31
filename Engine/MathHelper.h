@@ -13,6 +13,7 @@ const GLfloat TODEGREES = PI / 180.0f;
 const GLfloat TORADIANS = 180.0f / PI;
 const GLfloat BSPLINE_EPSILON = 1e-4f;
 const GLfloat MATRIX_EPSILON = 1e-6f;
+const glm::mat2 I = glm::mat2(1.0f);
 
 // Forward declartions
 namespace geom
@@ -72,7 +73,7 @@ public:
 	static geom::Rect getBounds(glm::vec2* vertices, UINT count);
 
 	// Generates a point cloud in a polygon
-	static std::vector<glm::vec2> generatePointCloud(geom::Poly* poly);
+	static std::vector<glm::vec2> generatePointCloud(geom::Poly* poly, UINT ptCount);
 
 	static bool isPointInPolygon(geom::Poly* poly, glm::vec2 pt);
 
@@ -84,34 +85,22 @@ public:
 	// Slope of interpolation function
 	static GLfloat bsplineSlope(GLfloat x);
 
-	static void diagSum(GLfloat val, glm::mat2x2* m)
+	static GLfloat trace(glm::mat2 mat) { return mat[0][0] + mat[1][1]; }
+
+	static glm::mat2 outer(glm::vec2 a, glm::vec2 b);
+
+	template<typename T>
+	static T clamp(T val, T min, T max)
 	{
-		for (UINT i = 0; i < 2; i++)
-			m[i][i] += val;
-	}
-	static void diagProduct(glm::vec2 val, glm::mat2x2* m)
-	{
-		for (UINT i = 0; i<2; i++)
-		{
-			for (UINT j = 0; j < 2; j++)
-			{
-				m[i][j] *= val[i];
-			}
-		}
-	}
-	static void diagProductInv(glm::vec2 val, glm::mat2x2* m)
-	{
-		for (UINT i = 0; i < 2; i++)
-		{
-			for (UINT j = 0; j < 2; j++)
-			{
-				m[i][j] /= val[i];
-			}
-		}
+		if (val > max)
+			return max;
+		else if (val < min)
+			return min;
+		else
+			return val;
 	}
 
-	static void setIdentity(glm::mat2x2& m);
 	static void setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11);
 
-	static void svd(glm::mat2x2 source, glm::mat2x2* w, glm::vec2* e, glm::mat2x2* v);
+	//static void svd(glm::mat2x2 source, glm::mat2x2* w, glm::vec2* e, glm::mat2x2* v);
 };
