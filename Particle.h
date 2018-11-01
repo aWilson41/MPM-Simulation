@@ -12,7 +12,7 @@ public:
 		Particle::mass = mass;
 	}
 
-	void updatePos(GLfloat dt) { *pos += velocity * dt; }
+	void updatePos(GLfloat dt) { *pos += glm::vec3(velocity, 0.0f) * dt; }// *pos + velocity * dt; }
 	void updateGradient(GLfloat dt) { defG = (I + vG * dt) * defG; }
 	// Energy derivative
 	const glm::mat2 calcStVenantPK2Stress()

@@ -33,7 +33,7 @@ namespace geom
 		Circle::radius = radius;
 		type = ShapeType::CIRCLE;
 	}
-	GLfloat Circle::area() { return TWOPI * radius; }
+	GLfloat Circle::area() { return PI * radius * radius; }
 
 	// Rectangle
 	Rect::Rect()

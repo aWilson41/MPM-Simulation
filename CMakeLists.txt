@@ -16,16 +16,16 @@ set(CMAKE_AUTOMOC ON)
 # Find the QtWidgets library
 find_package(Qt5Widgets REQUIRED QUIET)
 find_path(GLM glm)
-find_path(ASSIMP Assimp)
+#find_path(ASSIMP Assimp)
 # Include the current directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${GLM}/glm ${ASSIMP}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${GLM}/glm)# ${ASSIMP}/include)
 
 qt5_add_resources(RESSrcs ${QRC_FILES})
 
 
 add_executable(MPMSim WIN32 ${CPP_FILES} ${H_FILES} ${RESSrcs} ${IMAGERSC} ${SHADER_FILES} ${ENGINE_FILES})# ${LODEPNG_FILES})
 #qt5_use_modules(SpringMassTreeSim Core Gui)
-target_link_libraries(MPMSim Qt5::Widgets ${ASSIMP}/lib/assimp-vc140-mt.lib)
+target_link_libraries(MPMSim Qt5::Widgets)# ${ASSIMP}/lib/assimp-vc140-mt.lib)
 
 if(WIN32) # Check if we are on Windows
   if(MSVC) # Check if we are using the Visual Studio compiler

@@ -36,8 +36,13 @@ void MainWidget::initializeGL()
 	// Create a 2d polygon to randomly distribute points/particles in
 	geom::Poly circlePoly;
 	circlePoly.FromCircle(geom::Circle(0.0f, 50.0f, 100.0f), 25);
+	GLfloat circlePolyArea = circlePoly.area();
+	printf("Polygon Area:   %f\n", circlePolyArea);
 	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
-	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, circlePoly.area() / particleArea);
+	printf("Particle Area:  %f\n", particleArea);
+	UINT particleCount = circlePolyArea / particleArea;
+	printf("Particle Count: %d\n", particleCount);
+	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, particleCount);
 	std::vector<glm::vec3> pts = std::vector<glm::vec3>(results.size());
 	// Convert to vec3
 	for (UINT i = 0; i < results.size(); i++)

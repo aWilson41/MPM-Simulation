@@ -194,21 +194,17 @@ geom::Rect MathHelp::getBounds(glm::vec2* vertices, UINT count)
 std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly, UINT ptCount)
 {
 	std::vector<glm::vec2> results;
-
-	const GLfloat ratio = 0.05f;
-	UINT numPts = polygonArea(poly) * ratio;
-
 	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
 	glm::vec2 size = bounds.extent * 2.0f;
 
 	UINT maxUint = std::numeric_limits<UINT>::max();
 	std::uniform_int_distribution<std::mt19937::result_type> random(0, maxUint);
 	std::mt19937 rng = std::mt19937(time(NULL));
-	while (results.size() < numPts)
+	while (results.size() < ptCount)
 	{
 		// Generate a random point
 		// Generate random in 0, 1000
-		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(random(rng), static_cast<GLfloat>(random(rng))));
+		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(random(rng)), static_cast<GLfloat>(random(rng)));
 		// Change random to [-1, 1]
 		newPt = newPt / (maxUint * 0.5f) - 1.0f;
 		// Change random to [-(width or height) / 2, (width or height) / 2] and add center

@@ -79,12 +79,6 @@ public:
 
 	static GLfloat polygonArea(geom::Poly* poly);
 
-	//Cubic B-spline shape/basis/interpolation function
-	//A smooth curve from (0,1) to (1,0)
-	static GLfloat bspline(GLfloat x);
-	// Slope of interpolation function
-	static GLfloat bsplineSlope(GLfloat x);
-
 	static GLfloat trace(glm::mat2 mat) { return mat[0][0] + mat[1][1]; }
 
 	static glm::mat2 outer(glm::vec2 a, glm::vec2 b);
