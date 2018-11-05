@@ -42,6 +42,7 @@ void MainWidget::initializeGL()
 	printf("Particle Area:  %f\n", particleArea);
 	UINT particleCount = circlePolyArea / particleArea;
 	printf("Particle Count: %d\n", particleCount);
+	// Create a random distribute of points in this shape
 	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, particleCount);
 	std::vector<glm::vec3> pts = std::vector<glm::vec3>(results.size());
 	// Convert to vec3
@@ -50,10 +51,7 @@ void MainWidget::initializeGL()
 		pts[i] = glm::vec3(results[i], 0.0f);
 	}
 
-	geom::Rect bounds = MathHelp::getBounds(results.data(), static_cast<UINT>(results.size()));
-	mpmGrid = new MPMGrid();
-	mpmGrid->initGrid(bounds.pos, 2.0f * bounds.size(), 64, 64);
-
+	// Create the point cloud object for rendering
 	ptCloud = new PointCloud();
 	ptCloud->setPoints(pts.data(), static_cast<UINT>(pts.size()));
 	ptCloud->world = MathHelp::matrixScale(1.0f);
@@ -61,16 +59,20 @@ void MainWidget::initializeGL()
 #pragma endregion
 
 #pragma region Init Particles
-	// Create particles from the points, link the position with the particle
-	// This way points exist sequentially in point clouds array to easily get to the gpu
+	// Create particles from the points, particles hold position pointers to avoid
+	// copying them during rendering
 	for (UINT i = 0; i < ptCloud->pts.size(); i++)
 	{
 		Particle particle(&ptCloud->pts[i], PARTICLE_MASS);
 		particles.push_back(particle);
 	}
 
-	//mpmGrid->initMass(particles.data(), static_cast<UINT>(particles.size()));
-	//mpmGrid->calcParticleVolume(particles.data(), static_cast<UINT>(particles.size()));
+	// Create the MPM grid
+	geom::Rect bounds = MathHelp::getBounds(results.data(), static_cast<UINT>(results.size()));
+	mpmGrid = new MPMGrid();
+	glm::vec2 paddedBounds = bounds.size() * 3.0f; // 2x the size of the init bounds
+	mpmGrid->initGrid(bounds.pos - (paddedBounds - bounds.size()) / 2.0f, paddedBounds, 64, 64);
+	mpmGrid->initParticles(particles.data(), particles.size());
 #pragma endregion
 
 	plane = new Plane();
@@ -143,6 +145,7 @@ void MainWidget::mouseMoveEvent(QMouseEvent* e)
 	mousePos = newMousePos;
 }
 
+// Camera is updated on a sphere (currently just lerped)
 void MainWidget::updateCamera(glm::vec2 pos)
 {
 	glm::vec2 diff = (mousePos - pos) * 0.5f;
@@ -173,31 +176,11 @@ void MainWidget::timerEvent(QTimerEvent* e)
 {
 	update();
 	// constant timestep of 12ms
-	float dt = 0.05f;
-	for (UINT i = 0; i < particles.size(); i++)
-	{
-		//grid->initMass(particles.data(), static_cast<UINT>(particles.size()));
-		//grid->initVelocities(particles.data(), static_cast<UINT>(particles.size()));
-		//grid->computeVelocities(particles.data(), static_cast<UINT>(particles.size()), glm::vec2(0.0f, -9.8f), dt);
-		//grid->updateVelocities(particles.data(), static_cast<UINT>(particles.size()));
+	//float dt = 0.001f;
+	mpmGrid->projectToGrid();
+	mpmGrid->update(1.0f);
+	printf("Iteration Complete\n");
 
-		////max_velocity = 0;
-		//for (UINT i = 0; i < particles.size(); i++)
-		//{
-		//	particles[i].updatePos(dt);
-		//	particles[i].updateGradient(dt);
-		//	particles[i].applyPlasticity();
-		//	//Update max velocity, if needed
-		//	/*glm::s
-		//	float vel = particles[i].velocity();*/
-		//	/*if (vel > max_velocity)
-		//		max_velocity = vel;*/
-		//}
-
-		/*particles[i].applyForce(glm::vec3(0.0f, -9.8f, 0.0f));
-		particles[i].integrate(dt);
-		particles[i].resetForce();*/
-	}
 	ptCloud->updateBuffer();
 }
 

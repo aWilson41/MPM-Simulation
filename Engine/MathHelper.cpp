@@ -193,6 +193,7 @@ geom::Rect MathHelp::getBounds(glm::vec2* vertices, UINT count)
 
 std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly, UINT ptCount)
 {
+	// Just a rectangle hit or miss strategy. Maybe later I'll triangulate and actually calculate points inside the poly
 	std::vector<glm::vec2> results;
 	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
 	glm::vec2 size = bounds.extent * 2.0f;
