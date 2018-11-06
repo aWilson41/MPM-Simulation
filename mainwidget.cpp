@@ -7,6 +7,7 @@
 #include "MPMGrid.h"
 #include "Particle.h"
 
+#include <gl/GL.h>
 #include <math.h>
 #include <QApplication>
 #include <qdesktopwidget.h>
