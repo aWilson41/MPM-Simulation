@@ -23,31 +23,10 @@ MainWidget::MainWidget(QWidget* parent) :
 	QPoint mousePt = mapFromGlobal(QCursor::pos());
 	mousePos = glm::vec2(static_cast<GLfloat>(mousePt.x()), static_cast<GLfloat>(mousePt.y()));
 	setMouseTracking(true);
-	updateCamera(mousePos);
 
-
-	/*glm::mat2 source;
-	source[0][0] = 42;
-	source[0][1] = 2;
-	source[1][0] = 104;
-	source[1][1] = 23;
-	MathHelp::printMat(source);
-	printf("\n");
-
-	glm::mat2 u, v;
-	glm::vec2 s;
-	MathHelp::svd(glm::transpose(source), &u, &s, &v);
-
-	MathHelp::printMat(u);
-	printf("\n");
-	MathHelp::printVec(s);
-	printf("\n");
-	MathHelp::printMat(v);
-	printf("\n");
-	glm::mat2 st = I;
-	st[0][0] = s[0];
-	st[1][1] = s[1];
-	MathHelp::printMat(u * st * v);*/
+	// Initialize the camera
+	cam.init(mousePos);
+	update();
 }
 
 void MainWidget::initializeGL()
@@ -155,10 +134,17 @@ void MainWidget::mouseReleaseEvent(QMouseEvent* e)
 
 }
 
+void MainWidget::keyPressEvent(QKeyEvent* e)
+{
+	if (e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return)
+		running = !running;
+}
+
 void MainWidget::wheelEvent(QWheelEvent* e)
 {
-	rho1 -= e->delta() * 0.004f;
-	updateCamera(mousePos);
+	cam.setRho(cam.getRho() - e->delta() * 0.004f);
+	cam.rotate(cam.getPrevPos());
+	update();
 }
 
 void MainWidget::mouseMoveEvent(QMouseEvent* e)
@@ -166,39 +152,23 @@ void MainWidget::mouseMoveEvent(QMouseEvent* e)
 	// Get the new mouse position as vec2
 	glm::vec2 newMousePos = MathHelp::qPointToVec2(e->pos());
 	if (e->buttons() == Qt::LeftButton)
-		updateCamera(newMousePos);
-	mousePos = newMousePos;
-}
-
-// Camera is updated on a sphere (currently just lerped)
-void MainWidget::updateCamera(glm::vec2 pos)
-{
-	glm::vec2 diff = (mousePos - pos) * 0.5f;
-	theta -= diff.x * 0.008f;
-	phi += diff.y * 0.008f;
-	
-	// Clamp
-	if (phi > 3.14f)
-		phi = 3.14f;
-	else if (phi < 0.01f)
-		phi = 0.01f;
-
-	// Exponentially scale the scroll out
-	GLfloat rho2 = std::pow(1.2, rho1) * 0.01f;
-	// Convert spherical coords
-	glm::vec3 eyePos = glm::vec3(
-		rho2 * sin(phi) * cos(theta),
-		rho2 * cos(phi),
-		rho2 * sin(phi) * sin(theta));
-
-	// Should prob use a slerp here but ohwell
-	cam.setEyePos(eyePos);
-	cam.setFocalPt(0.0f, 0.0f, 0.0f);
-	cam.updateLookAt();
+	{
+		cam.rotate(newMousePos);
+		update();
+	}
+	else if (e->buttons() == Qt::MiddleButton)
+	{
+		cam.pan(newMousePos);
+		update();
+	}
+	cam.setPos(newMousePos);
 }
 
 void MainWidget::timerEvent(QTimerEvent* e)
 {
+	if (!running)
+		return;
+
 	update();
 	// constant timestep of 12ms
 	//float dt = 0.001f;

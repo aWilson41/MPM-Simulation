@@ -7,7 +7,21 @@ class Camera
 public:
 	Camera() { reset(); }
 
-	void reset();
+	void reset()
+	{
+		fov = 45.0f;
+		eyePos = focalPt = glm::vec3(0.0f);
+		up = glm::vec3(0.0f, 1.0f, 0.0f);
+		view = glm::mat4(1.0f);
+
+		// 1, 0, 0, 0
+		// 0, 1, 0, 0
+		// 0, 0, 1, 0
+		// 0, 0, 1, 0 default proj matrix. Stuffs z in w to be used in z divide
+		proj = glm::mat4(1.0f);
+		proj[2][3] = 1.0f;
+		proj[3][3] = 0.0f;
+	}
 
 	void setPerspective(GLfloat fov, GLfloat aspectRatio, GLfloat nearZ, GLfloat farZ)
 	{
@@ -32,17 +46,17 @@ public:
 
 public:
 	// Camera view matrix
-	glm::mat4 view;
+	glm::mat4 view = I;
 	// Camera projection matrix
-	glm::mat4 proj;
+	glm::mat4 proj = I;
 	// Eye position
-	glm::vec3 eyePos;
+	glm::vec3 eyePos = glm::vec3(0.0f);;
 	// Focal point
-	glm::vec3 focalPt;
+	glm::vec3 focalPt = glm::vec3(0.0f);;
 	// Up
-	glm::vec3 up;
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	// Camera specs
-	GLfloat fov;
+	GLfloat fov = 45.0f;
 	GLfloat aspectRatio;
 	GLfloat nearZ;
 	GLfloat farZ;

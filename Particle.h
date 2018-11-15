@@ -56,10 +56,11 @@ public:
 
 		glm::mat2x2 ucpy(svdU), vcpy(svdV);
 		
-		// Divide diagonal by singular values
+		// Divide diagonal by clamped singular values (so if has a value over max (excess) like 2.4 it would produce a value > 1 ie: 2.4 / 2 = 1.2)
 		vcpy = MathHelp::diagInvProduct(vcpy, s);
-		// Multiple diagonal by singular values
+		// Multiple diagonal by clamped singular values (conversly if it has an excess like 2.4 it would produce value < 1  ie: 2 / 2.4 = 0.84)
 		ucpy = MathHelp::diagProduct(ucpy, s);
+		// So we can say diagonal values are removed from ucpy and put in vcpy when we exceed the stretch ratio
 		defGp = vcpy * glm::transpose(svdU) * defG;
 		defGe = ucpy * glm::transpose(svdV);
 	}
@@ -80,7 +81,7 @@ public:
 	glm::mat2 defGp = I; // Plastic deformation gradient
 
 	glm::mat2 svdU = I;
-	glm::vec2 s;
+	glm::vec2 s = glm::vec2(1.0f, 1.0f);
 	glm::mat2 svdV = I;
 
 	glm::mat2 vG = glm::mat2(0.0f); // Velocity gradient

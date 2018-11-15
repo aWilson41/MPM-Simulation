@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine\Camera.h"
+#include "Engine\TrackballCamera.h"
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
@@ -22,6 +22,7 @@ public:
 protected:
 	void mousePressEvent(QMouseEvent* e) override;
 	void mouseReleaseEvent(QMouseEvent* e) override;
+	void keyPressEvent(QKeyEvent* e) override;
 	void wheelEvent(QWheelEvent* e) override;
 	void mouseMoveEvent(QMouseEvent* e) override;
 	void timerEvent(QTimerEvent* e) override;
@@ -31,12 +32,9 @@ protected:
 	void paintGL() override;
 
 	void initShaders();
-
-protected:
-	void updateCamera(glm::vec2 pos);
 	
 private:
-	Camera cam;
+	TrackballCamera cam;
 	QBasicTimer timer;
 	QOpenGLShaderProgram normShader;
 	QOpenGLShaderProgram ptShader;
@@ -50,7 +48,6 @@ private:
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
 
 	glm::vec2 mousePos = glm::vec2(0.0f);
-	GLfloat phi = 1.4f;
-	GLfloat theta = 1.57f;
-	GLfloat rho1 = 60.0f;
+
+	bool running = false;
 };

@@ -290,13 +290,17 @@ void MPMGrid::update(GLfloat dt)
 	maxParticleDefDet = 0.0f;
 #endif
 
+	// Calculates node velocities from particles
 	updateGridVelocities(dt);
+	// Calculates particle velocities from grid velocities (also calc velocity gradient)
 	updateParticleVelocities();
-	// Finally the particles positions are updated
 	for (UINT i = 0; i < pointCount; i++)
 	{
+		// Update the particle position using the velocity
 		particles[i].updatePos(dt);
+		// Update the deformation gradient using the velocity gradient (which was calculated from the velocity)
 		particles[i].updateGradient(dt);
+		// Update the plastic and deformation parts from the resulting deformation gradient
 		particles[i].applyPlasticity();
 
 #ifdef STATS
