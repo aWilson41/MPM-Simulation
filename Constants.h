@@ -11,3 +11,7 @@ static const GLfloat SHEAR_MODULUS = YOUNGS_MODULUS / (2.0f * (1.0f + POSSIONS_R
 
 static const GLfloat PARTICLE_MASS = 95.28f; // 930 kg / m^3 -> 95.28 kg / m^2
 static const GLfloat PARTICLE_DIAMETER = 1.5f; // meters, This controls particle count
+
+static const GLfloat HARDENING = 0.01f;
+static const GLfloat CRIT_STRETCH = 0.01f;
+static const GLfloat CRIT_COMPRESS = 0.01f;

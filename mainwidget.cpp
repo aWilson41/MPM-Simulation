@@ -24,6 +24,30 @@ MainWidget::MainWidget(QWidget* parent) :
 	mousePos = glm::vec2(static_cast<GLfloat>(mousePt.x()), static_cast<GLfloat>(mousePt.y()));
 	setMouseTracking(true);
 	updateCamera(mousePos);
+
+
+	/*glm::mat2 source;
+	source[0][0] = 42;
+	source[0][1] = 2;
+	source[1][0] = 104;
+	source[1][1] = 23;
+	MathHelp::printMat(source);
+	printf("\n");
+
+	glm::mat2 u, v;
+	glm::vec2 s;
+	MathHelp::svd(glm::transpose(source), &u, &s, &v);
+
+	MathHelp::printMat(u);
+	printf("\n");
+	MathHelp::printVec(s);
+	printf("\n");
+	MathHelp::printMat(v);
+	printf("\n");
+	glm::mat2 st = I;
+	st[0][0] = s[0];
+	st[1][1] = s[1];
+	MathHelp::printMat(u * st * v);*/
 }
 
 void MainWidget::initializeGL()
@@ -73,7 +97,7 @@ void MainWidget::initializeGL()
 	mpmGrid = new MPMGrid();
 	glm::vec2 paddedBounds = bounds.size() * 3.0f; // 2x the size of the init bounds
 	mpmGrid->initGrid(bounds.pos - (paddedBounds - bounds.size()) / 2.0f, paddedBounds, 64, 64);
-	mpmGrid->initParticles(particles.data(), particles.size());
+	mpmGrid->initParticles(particles.data(), static_cast<UINT>(particles.size()));
 #pragma endregion
 
 	plane = new Plane();

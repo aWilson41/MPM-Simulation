@@ -297,6 +297,7 @@ void MPMGrid::update(GLfloat dt)
 	{
 		particles[i].updatePos(dt);
 		particles[i].updateGradient(dt);
+		particles[i].applyPlasticity();
 
 #ifdef STATS
 		GLfloat defGDet = glm::determinant(particles[i].defG);

@@ -83,6 +83,29 @@ public:
 
 	static glm::mat2 outer(glm::vec2 a, glm::vec2 b);
 
+	template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+	static void printMat(glm::mat<C, R, T, Q> m)
+	{
+		for (glm::length_t r = 0; r < R; r++)
+		{
+			for (glm::length_t c = 0; c < C - 1; c++)
+			{
+				printf("%f, ", m[c][r]);
+			}
+			printf("%f\n", m[C - 1][r]);
+		}
+	}
+
+	template<glm::length_t N, typename T, glm::qualifier Q>
+	static void printVec(glm::vec<N, T, Q> vec)
+	{
+		for (glm::length_t n = 0; n < N - 1; n++)
+		{
+			printf("%f, ", vec[n]);
+		}
+		printf("%f\n", vec[N - 1]);
+	}
+
 	template<typename T>
 	static T clamp(T val, T min, T max)
 	{
@@ -96,5 +119,50 @@ public:
 
 	static void setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11);
 
-	//static void svd(glm::mat2x2 source, glm::mat2x2* w, glm::vec2* e, glm::mat2x2* v);
+	static void svd(glm::mat2x2 source, glm::mat2x2* u, glm::vec2* s, glm::mat2x2* v);
+
+	// Only for square matrices
+	template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+	static glm::mat<C, R, T, Q> diagProduct(glm::mat<C, R, T, Q> m, glm::vec<C, T, Q> vec)
+	{
+		glm::mat<C, R, T, Q> results = m;
+		for (glm::length_t i = 0; i < C; i++)
+		{
+			results[i][i] *= vec[i];
+		}
+		return results;
+	}
+	// Only for square matrices
+	template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+	static glm::mat<C, R, T, Q> diagSum(glm::mat<C, R, T, Q> m, glm::vec<C, T, Q> vec)
+	{
+		glm::mat<C, R, T, Q> results = m;
+		for (glm::length_t i = 0; i < C; i++)
+		{
+			results[i][i] += vec[i];
+		}
+		return results;
+	}
+	// Only for square matrices
+	template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+	static glm::mat<C, R, T, Q> diagSum(glm::mat<C, R, T, Q> m, GLfloat a)
+	{
+		glm::mat<C, R, T, Q> results = m;
+		for (glm::length_t i = 0; i < C; i++)
+		{
+			results[i][i] += a;
+		}
+		return results;
+	}
+	// Only for square matrices
+	template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+	static glm::mat<C, R, T, Q> diagInvProduct(glm::mat<C, R, T, Q> m, glm::vec<C, T, Q> vec)
+	{
+		glm::mat<C, R, T, Q> results = m;
+		for (glm::length_t i = 0; i < C; i++)
+		{
+			results[i][i] /= vec[i];
+		}
+		return results;
+	}
 };
