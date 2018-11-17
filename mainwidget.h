@@ -26,6 +26,8 @@ protected:
 	void wheelEvent(QWheelEvent* e) override;
 	void mouseMoveEvent(QMouseEvent* e) override;
 	void timerEvent(QTimerEvent* e) override;
+	void simulate();
+	void printIterationStats();
 
 	void initializeGL() override;
 	void resizeGL(int w, int h) override;
@@ -40,6 +42,7 @@ private:
 	QOpenGLShaderProgram ptShader;
 
 	Plane* plane = nullptr;
+	Plane* boundsPlane = nullptr;
 	PointCloud* ptCloud = nullptr;
 	MPMGrid* mpmGrid = nullptr;
 	std::vector<Material*> materials;
@@ -50,4 +53,5 @@ private:
 	glm::vec2 mousePos = glm::vec2(0.0f);
 
 	bool running = false;
+	UINT iter = 0;
 };

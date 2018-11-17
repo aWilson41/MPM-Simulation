@@ -1,6 +1,11 @@
 #pragma once
 #include "Camera.h"
 
+// Should have context to scene so it knows what scale to maintain
+// Hard to tell when you're too zoomed in as two scales at different focal points result
+// in the same image. If we knew the size of what you're looking at we could enforce a 
+// constraint on scale where zooming in further moves focal point instead
+
 // A camera on a sphere with focal point in middle
 // Supports zoom and pan as well
 class TrackballCamera : public Camera

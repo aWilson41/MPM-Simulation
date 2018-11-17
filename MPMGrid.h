@@ -6,8 +6,13 @@ class Particle;
 class GridNode
 {
 public:
+	GridNode() { }
+	GridNode(glm::vec2 pos) { GridNode::pos = pos; }
+
+public:
 	GLfloat mass = 0.0f;
 	//bool active = false;
+	glm::vec2 pos = glm::vec2(0.0f);
 	glm::vec2 velocity = glm::vec2(0.0f);
 	glm::vec2 newVelocity = glm::vec2(0.0f);
 	glm::vec2 force = glm::vec2(0.0f);
@@ -33,6 +38,10 @@ public:
 	void updateGridVelocities(GLfloat dt);
 	// Particles velocities are updated according to the grid velocities
 	void updateParticleVelocities();
+
+	// 3d pos used for 
+	void collision(GLfloat* pos, glm::vec2& v, GLfloat dt);
+
 	void projectToGrid();
 	void update(GLfloat dt);
 

@@ -4,14 +4,14 @@
 #include <iostream>
 
 // If this is on we will collect max values to track instabilities
-//#define STATS
+#define STATS
 
 static GLfloat NX(GLfloat x)
 {
 	x = fabs(x);
 	//GLfloat w;
 	if (x < 1.0f)
-		return x * x*(x * 0.5f - 1.0f) + 2.0f / 3.0f;
+		return x * x * (x * 0.5f - 1.0f) + 2.0f / 3.0f;
 	else if (x < 2.0f)
 		return x * (x * (-x / 6.0f + 1.0f) - 2.0f) + 4.0f / 3.0f;
 	else
@@ -21,9 +21,9 @@ static GLfloat dNX(const GLfloat x)
 {
 	GLfloat absx = fabs(x);
 	if (absx < 1.0f)
-		return 1.5f * absx * x - 2.0f * x;
+		return x * (1.5f * absx - 2.0f);
 	else if (absx < 2.0f)
-		return -0.5f * absx * x + 2.0f * x - 2.0f * x / absx;
+		return x * (-0.5f * absx + 2.0f - 2.0f / absx);
 	else
 		return 0.0f;
 }
@@ -92,9 +92,13 @@ void MPMGrid::initParticles(Particle* particles, UINT count)
 void MPMGrid::initMass()
 {
 	//memset(nodes, 0, sizeof(GridNode) * nodeCount);
-	for (int i = 0; i < nodeCount; i++)
+	for (int y = 0; y < gridHeight; y++)
 	{
-		nodes[i] = GridNode();
+		for (int x = 0; x < gridWidth; x++)
+		{
+			// Physical coordinates of the node
+			nodes[y * gridWidth + x] = GridNode(glm::vec2(x, y) * cellSize + origin);
+		}
 	}
 
 	// Weight the mass of the particles into the nodes
@@ -102,8 +106,8 @@ void MPMGrid::initMass()
 	{
 		Particle& p = particles[i];
 		glm::vec2 pPos = p.getPos();
-		p.gridPosX = static_cast<int>((pPos.x - origin.x) / cellSize.x - 0.5f);
-		p.gridPosY = static_cast<int>((pPos.y - origin.y) / cellSize.y - 0.5f);
+		p.gridPosX = static_cast<int>((pPos.x - origin.x) / cellSize.x);
+		p.gridPosY = static_cast<int>((pPos.y - origin.y) / cellSize.y);
 		UINT startX = static_cast<UINT>(MathHelp::clamp(p.gridPosX - 2, 0, gridWidth));
 		UINT endX = static_cast<UINT>(MathHelp::clamp(p.gridPosX + 3, 0, gridWidth));
 		UINT startY = static_cast<UINT>(MathHelp::clamp(p.gridPosY - 2, 0, gridHeight));
@@ -112,22 +116,23 @@ void MPMGrid::initMass()
 		{
 			for (UINT x = startX; x < endX; x++)
 			{
-				// Physical position/center of grid node
-				glm::vec2 gridPos = glm::vec2(x, y) * cellSize + origin;
+				UINT i = y * gridWidth + x;
 				// Diff between particle's and grid nodes physical position, converted back to grid coordinates
-				glm::vec2 diff = (pPos - gridPos) / cellSize;
-				nodes[y * gridWidth + x].mass += p.mass * weight(diff);
+				glm::vec2 diff = (pPos - nodes[i].pos) / cellSize;
+				nodes[i].mass += p.mass * weight(diff);
 			}
 		}
 	}
 }
 
+// Puts particle momentums onto the grid (as velocity)
 void MPMGrid::initVelocities()
 {
 	// Weight the velocities of the particles into the nodes
 	for (UINT i = 0; i < pointCount; i++)
 	{
 		Particle& p = particles[i];
+		glm::vec2 pPos = p.getPos();
 		UINT startX = static_cast<UINT>(MathHelp::clamp(p.gridPosX - 2, 0, gridWidth));
 		UINT endX = static_cast<UINT>(MathHelp::clamp(p.gridPosX + 3, 0, gridWidth));
 		UINT startY = static_cast<UINT>(MathHelp::clamp(p.gridPosY - 2, 0, gridHeight));
@@ -136,12 +141,10 @@ void MPMGrid::initVelocities()
 		{
 			for (UINT x = startX; x < endX; x++)
 			{
-				UINT index = y * gridWidth + x;
-				// Physical position/center of grid node
-				glm::vec2 gridPos = glm::vec2(x, y) * cellSize + origin;
+				UINT i = y * gridWidth + x;
 				// Diff between particle's and grid nodes physical position, converted back to grid coordinates
-				glm::vec2 diff = (p.getPos() - gridPos) / cellSize;
-				nodes[index].velocity += p.velocity * weight(diff);
+				glm::vec2 diff = (pPos - nodes[i].pos) / cellSize;
+				nodes[i].velocity += p.velocity * p.mass * weight(diff);
 			}
 		}
 	}
@@ -153,6 +156,7 @@ void MPMGrid::initVelocities()
 	}*/
 }
 
+// Updates velocities based on stress and gravity
 void MPMGrid::updateGridVelocities(GLfloat dt)
 {
 #ifdef STATS
@@ -162,7 +166,7 @@ void MPMGrid::updateGridVelocities(GLfloat dt)
 	for (UINT i = 0; i < pointCount; i++)
 	{
 		Particle& p = particles[i];
-		// Initial volume * cauchy
+		// Initial volume * cauchy. Energy derivative is force. Change in energy of distance (strain)
 		glm::mat2 energyDerivative = -p.volume * p.calcCauchyStress();
 #ifdef STATS
 		GLfloat det = glm::determinant(energyDerivative);
@@ -180,26 +184,27 @@ void MPMGrid::updateGridVelocities(GLfloat dt)
 		{
 			for (UINT x = startX; x < endX; x++)
 			{
-				UINT index = y * gridWidth + x;
-				// Physical position/center of grid node
-				glm::vec2 gridPos = glm::vec2(x, y) * cellSize + origin;
+				UINT i = y * gridWidth + x;
 				// Diff between particle's and grid nodes physical position, converted back to grid coordinates
-				glm::vec2 diff = (p.getPos() - gridPos) / cellSize;
-				nodes[index].force += energyDerivative * gradWeight(diff);
+				glm::vec2 diff = (p.getPos() - nodes[i].pos) / cellSize;
+				nodes[i].force += energyDerivative * gradWeight(diff);
 			}
 		}
 	}
-
+#ifdef STATS
 	maxNodeF = 0.0f;
 	maxNodeVelocity = 0.0f;
-	glm::vec2 fG = glm::vec2(0.0f, -0.8f);
+#endif
+	glm::vec2 fG = glm::vec2(0.0f, -9.8f);
 	for (int i = 0; i < nodeCount; i++)
 	{
 		// Only update the node velocity if it is active (and non zero mass)
 		if (nodes[i].mass != 0.0f)
 		{
 			GLfloat invMass = 1.0f / nodes[i].mass;
-			// Previously we took the sum of velocities from all the particles so divide by total mass
+			// Previously we took the sum of all particles of momentum for the node so we must divide by cells mass
+			// I would do this in the velocity update but doing it here is more efficient (one less loop through all the nodes)
+			// Unfortunately it does mean the velocity isn't correct inbetween these function calls
 			nodes[i].velocity *= invMass;
 			nodes[i].newVelocity = nodes[i].velocity + (nodes[i].force * invMass + fG) * dt;
 
@@ -232,6 +237,7 @@ void MPMGrid::updateParticleVelocities()
 		Particle& p = particles[i];
 		p.vG = glm::mat2(0.0f);
 		p.density = 0.0f;
+		p.velocity = glm::vec2(0.0f);
 		glm::vec2 picVelocity = glm::vec2(0.0f);
 		glm::vec2 flipVelocity = p.velocity;
 		UINT startX = static_cast<UINT>(MathHelp::clamp(p.gridPosX - 2, 0, gridWidth));
@@ -242,11 +248,10 @@ void MPMGrid::updateParticleVelocities()
 		{
 			for (UINT x = startX; x < endX; x++)
 			{
-				const GridNode node = nodes[y * gridWidth + x];
-				// Physical position/center of grid node
-				glm::vec2 gridPos = glm::vec2(x, y) * cellSize + origin;
+				UINT i = y * gridWidth + x;
+				const GridNode node = nodes[i];
 				// Diff between particle's and grid nodes physical position, converted back to grid coordinates
-				glm::vec2 diff = (p.getPos() - gridPos) / cellSize;
+				glm::vec2 diff = (p.getPos() - nodes[i].pos) / cellSize;
 				GLfloat w = weight(diff);
 				glm::vec2 wG = gradWeight(diff);
 
@@ -268,13 +273,41 @@ void MPMGrid::updateParticleVelocities()
 			maxParticleVGDet = det;
 			maxParticleVG = p.vG;
 		}
-#endif
 
 		GLfloat v = glm::length(p.velocity);
 		if (v > maxParticleVelocity)
 			maxParticleVelocity = v;
+#endif
 		p.density *= invNodeArea;
 	}
+}
+
+void MPMGrid::collision(GLfloat* pos, glm::vec2& v, GLfloat dt)
+{
+	// Collision
+	GLfloat bounds[4] = { origin.x, origin.x + size.x, origin.y, origin.y + size.y };
+
+	// Calculate where it is moving too (without dt)
+	glm::vec2 p = glm::vec2(pos[0], pos[1]);
+	glm::vec2 advPos = p + v * dt;
+
+	// Lower
+	// If the position on the next update goes past the boundary
+	if (advPos.y < bounds[2])
+		// Adjust the velocity to meet the boundary on the next update
+		v.y = p.y - bounds[2];
+
+	// Upper
+	if (advPos.y > bounds[3])
+		v.y = p.y - bounds[3];
+
+	// Left
+	if (advPos.x < bounds[0])
+		v.x = p.x - bounds[0];
+
+	// Right
+	if (advPos.x > bounds[1])
+		v.x = p.x - bounds[1];
 }
 
 void MPMGrid::projectToGrid()
@@ -292,16 +325,25 @@ void MPMGrid::update(GLfloat dt)
 
 	// Calculates node velocities from particles
 	updateGridVelocities(dt);
+	
+	// Solving velocities on node level
+	for (UINT i = 0; i < nodeCount; i++)
+	{
+		collision(&nodes[i].pos.x, nodes[i].velocity, dt);
+	}
+
 	// Calculates particle velocities from grid velocities (also calc velocity gradient)
 	updateParticleVelocities();
+
 	for (UINT i = 0; i < pointCount; i++)
 	{
+		// Resolve velocities per particle
+		collision(&particles[i].pos->x, particles[i].velocity, dt);
+
 		// Update the particle position using the velocity
 		particles[i].updatePos(dt);
 		// Update the deformation gradient using the velocity gradient (which was calculated from the velocity)
 		particles[i].updateGradient(dt);
-		// Update the plastic and deformation parts from the resulting deformation gradient
-		particles[i].applyPlasticity();
 
 #ifdef STATS
 		GLfloat defGDet = glm::determinant(particles[i].defG);

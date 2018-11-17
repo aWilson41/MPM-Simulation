@@ -119,7 +119,11 @@ public:
 
 	static void setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11);
 
+	// Singular value decomp source = u * (s * I) * v^T
 	static void svd(glm::mat2x2 source, glm::mat2x2* u, glm::vec2* s, glm::mat2x2* v);
+
+	// Polar decomp but only returns the rotational
+	static void pd(glm::mat2x2 source, glm::mat2x2* r);
 
 	// Only for square matrices
 	template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
@@ -151,17 +155,6 @@ public:
 		for (glm::length_t i = 0; i < C; i++)
 		{
 			results[i][i] += a;
-		}
-		return results;
-	}
-	// Only for square matrices
-	template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
-	static glm::mat<C, R, T, Q> diagInvProduct(glm::mat<C, R, T, Q> m, glm::vec<C, T, Q> vec)
-	{
-		glm::mat<C, R, T, Q> results = m;
-		for (glm::length_t i = 0; i < C; i++)
-		{
-			results[i][i] /= vec[i];
 		}
 		return results;
 	}

@@ -291,3 +291,16 @@ void MathHelp::svd(glm::mat2x2 source, glm::mat2x2* u, glm::vec2* s, glm::mat2x2
 	(*v)[0][1] = tmp1(0, 1);
 	(*v)[1][1] = tmp1(1, 1);
 }
+
+void MathHelp::pd(glm::mat2x2 source, glm::mat2* r)
+{
+	glm::mat2 u, v;
+	glm::vec2 s;
+	svd(source, &u, &s, &v);
+	glm::mat2 tmp = u * glm::transpose(v);
+
+	(*r)[0][0] = tmp[0][0];
+	(*r)[1][0] = tmp[1][0];
+	(*r)[0][1] = tmp[0][1];
+	(*r)[1][1] = tmp[1][1];
+}
