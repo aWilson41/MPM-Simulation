@@ -1,7 +1,9 @@
 #pragma once
+#include <GL/glew.h>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
 #include <math.h>
-#include <QtOpenGL\qgl.h>
-#include <gtc\matrix_transform.hpp>
+#include <vector>
 
 typedef unsigned int UINT;
 
@@ -16,12 +18,12 @@ const GLfloat MATRIX_EPSILON = 1e-6f;
 const glm::mat2 I = glm::mat2(1.0f);
 
 // Forward declartions
-namespace geom
-{
-	class Rect;
-	class Ray;
-	class Poly;
-}
+//namespace geom
+//{
+//	class Rect;
+//	class Ray;
+//	class Poly;
+//}
 
 class MathHelp
 {
@@ -51,11 +53,11 @@ public:
 	static glm::vec3 baryCentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c);
 
 	// Computes ray given screen position, width, height, fov, and near plane
-	static geom::Ray computeEyeRay(glm::vec2 pos, UINT width, UINT height, GLfloat fov, GLfloat nearZ);
+	//static geom::Ray computeEyeRay(glm::vec2 pos, UINT width, UINT height, GLfloat fov, GLfloat nearZ);
 
 	// Computes intersection point on triangle and then bary centric coordinate, returns vec4(u, v, w, intersectionDepth)
 	// If failed, returns vec4(0, 0, 0, max)
-	static glm::vec4 triangleRayIntersection(geom::Ray ray, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 n);
+	//static glm::vec4 triangleRayIntersection(geom::Ray ray, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 n);
 
 	// Simple lerp between start and end given t [0, 1]
 	static glm::vec3 lerp(glm::vec3 start, glm::vec3 end, GLfloat t);
@@ -63,21 +65,18 @@ public:
 	// Catmull rom interpolation between p1 and p2 given t [0, 1]
 	static glm::vec3 catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t);
 
-	// Convience function to convert QPoint to glm::vec2
-	static glm::vec2 qPointToVec2(QPoint val) { return glm::vec2(static_cast<GLfloat>(val.x()), static_cast<GLfloat>(val.y())); }
-
 	// Calculates the centroid of a polygon
 	static glm::vec2 calculateCentroid(glm::vec2* vertices, UINT count);
 
 	// Calculates a bounding rectangle around the point set
-	static geom::Rect getBounds(glm::vec2* vertices, UINT count);
+	//static geom::Rect getBounds(glm::vec2* vertices, UINT count);
 
 	// Generates a point cloud in a polygon
-	static std::vector<glm::vec2> generatePointCloud(geom::Poly* poly, UINT ptCount);
+	/*static std::vector<glm::vec2> generatePointCloud(geom::Poly* poly, UINT ptCount);
 
 	static bool isPointInPolygon(geom::Poly* poly, glm::vec2 pt);
 
-	static GLfloat polygonArea(geom::Poly* poly);
+	static GLfloat polygonArea(geom::Poly* poly);*/
 
 	static GLfloat trace(glm::mat2 mat) { return mat[0][0] + mat[1][1]; }
 

@@ -56,12 +56,12 @@ glm::vec2 MathHelp::slope(GLfloat theta) { return glm::vec2(glm::cos(theta), glm
 
 glm::vec2 MathHelp::projAToB(glm::vec2 a, glm::vec2 b)
 {
-	GLfloat m = b.length();
+	GLfloat m = glm::length(b);
 	return b * (glm::dot(a, b) / (m * m));
 }
 glm::vec3 MathHelp::projAToB(glm::vec3 a, glm::vec3 b)
 {
-	GLfloat m = b.length();
+	GLfloat m = glm::length(b);
 	return b * (glm::dot(a, b) / (m * m));
 }
 
@@ -70,23 +70,23 @@ GLfloat MathHelp::triangleAreaSigned(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) {
 GLfloat MathHelp::triangleArea(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) { return abs(triangleAreaSigned(p1, p2, p3)); }
 // Computes intersection point on triangle and then bary centric coordinate, returns vec4(u, v, w, intersectionDepth)
 // If failed, returns vec4(0, 0, 0, max)
-glm::vec4 MathHelp::triangleRayIntersection(geom::Ray ray, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 n)
-{
-	// Ray plane intersection
-	GLfloat denom = glm::dot(ray.direction, n);
-	if (abs(denom) > 0.0001f) // epsilon
-	{
-		GLfloat t = glm::dot(p1 - ray.start, n) / denom;
-		glm::vec3 p = ray.start + ray.direction * t;
-
-		glm::vec3 bCoords = baryCentric(p, p1, p2, p3);
-
-		if (bCoords.x >= 0.0f && bCoords.y >= 0.0f && bCoords.z >= 0.0f)
-			return glm::vec4(bCoords.x, bCoords.y, bCoords.z, p.z);
-	}
-
-	return glm::vec4(0.0f, 0.0f, 0.0f, std::numeric_limits<GLfloat>::max());
-}
+//glm::vec4 MathHelp::triangleRayIntersection(geom::Ray ray, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 n)
+//{
+//	// Ray plane intersection
+//	GLfloat denom = glm::dot(ray.direction, n);
+//	if (abs(denom) > 0.0001f) // epsilon
+//	{
+//		GLfloat t = glm::dot(p1 - ray.start, n) / denom;
+//		glm::vec3 p = ray.start + ray.direction * t;
+//
+//		glm::vec3 bCoords = baryCentric(p, p1, p2, p3);
+//
+//		if (bCoords.x >= 0.0f && bCoords.y >= 0.0f && bCoords.z >= 0.0f)
+//			return glm::vec4(bCoords.x, bCoords.y, bCoords.z, p.z);
+//	}
+//
+//	return glm::vec4(0.0f, 0.0f, 0.0f, std::numeric_limits<GLfloat>::max());
+//}
 
 // Computes bary centric coordinates of point p in triangle a,b,c
 glm::vec3 MathHelp::baryCentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
@@ -123,13 +123,13 @@ glm::vec3 MathHelp::baryCentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3
 }
 
 // Computes ray given screen position, width, height, fov, and near plane
-geom::Ray MathHelp::computeEyeRay(glm::vec2 pos, UINT width, UINT height, GLfloat fov, GLfloat nearZ)
-{
-	GLfloat aspectRatio = static_cast<GLfloat>(width) / height;
-	GLfloat s = 2.0f * tan(fov * 0.5f);
-	glm::vec3 start = glm::vec3((pos.x / width - 0.5f) * s /** aspectRatio*/, (pos.y / height - 0.5f) * s, 1.0f) * nearZ;
-	return geom::Ray(start, glm::normalize(start));
-}
+//geom::Ray MathHelp::computeEyeRay(glm::vec2 pos, UINT width, UINT height, GLfloat fov, GLfloat nearZ)
+//{
+//	GLfloat aspectRatio = static_cast<GLfloat>(width) / height;
+//	GLfloat s = 2.0f * tan(fov * 0.5f);
+//	glm::vec3 start = glm::vec3((pos.x / width - 0.5f) * s /** aspectRatio*/, (pos.y / height - 0.5f) * s, 1.0f) * nearZ;
+//	return geom::Ray(start, glm::normalize(start));
+//}
 
 glm::vec3 MathHelp::lerp(glm::vec3 start, glm::vec3 end, GLfloat t) { return (start + t * (end - start)); }
 
@@ -169,84 +169,84 @@ glm::vec2 MathHelp::calculateCentroid(glm::vec2* vertices, UINT count)
 	return ((centroid + (v1 + v2) * a) / (6.0f * signedArea));
 }
 
-geom::Rect MathHelp::getBounds(glm::vec2* vertices, UINT count)
-{
-	GLfloat maxX = std::numeric_limits<GLfloat>::min();
-	GLfloat minX = std::numeric_limits<GLfloat>::max();
-	GLfloat maxY = std::numeric_limits<GLfloat>::min();
-	GLfloat minY = std::numeric_limits<GLfloat>::max();
-
-	for (UINT i = 0; i < count; i++)
-	{
-		if (vertices[i].x > maxX)
-			maxX = vertices[i].x;
-		if (vertices[i].x < minX)
-			minX = vertices[i].x;
-		if (vertices[i].y > maxY)
-			maxY = vertices[i].y;
-		if (vertices[i].y < minY)
-			minY = vertices[i].y;
-	}
-	glm::vec2 size = glm::vec2(maxX - minX, maxY - minY);
-	glm::vec2 center = glm::vec2(minX, minY) + size * 0.5f;
-
-	return geom::Rect(center, size);
-}
-
-std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly, UINT ptCount)
-{
-	// Just a rectangle hit or miss strategy. Maybe later I'll triangulate and actually calculate points inside the poly
-	std::vector<glm::vec2> results;
-	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
-	glm::vec2 size = bounds.extent * 2.0f;
-
-	UINT maxUint = std::numeric_limits<UINT>::max();
-	std::uniform_int_distribution<std::mt19937::result_type> random(0, maxUint);
-	std::mt19937 rng = std::mt19937(time(NULL));
-	while (results.size() < ptCount)
-	{
-		// Generate a random point
-		// Generate random in 0, 1000
-		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(random(rng)), static_cast<GLfloat>(random(rng)));
-		// Change random to [-1, 1]
-		newPt = newPt / (maxUint * 0.5f) - 1.0f;
-		// Change random to [-(width or height) / 2, (width or height) / 2] and add center
-		newPt = newPt * bounds.extent + bounds.pos;
-
-		// Check if the point lies in the polygon
-		if (isPointInPolygon(poly, newPt))
-			results.push_back(newPt);
-	}
-
-	return results;
-}
-
-bool MathHelp::isPointInPolygon(geom::Poly* poly, glm::vec2 pt)
-{
-	bool result = false;
-	UINT len = static_cast<UINT>(poly->vertices.size());
-	for (UINT i = 0, j = len - 1; i < len; j = i++)
-	{
-		glm::vec2& vi = poly->vertices[i];
-		glm::vec2& vj = poly->vertices[j];
-		if ((vi.y > pt.y) != (vj.y > pt.y) && (pt.x < (vj.x - vi.x) * (pt.y - vi.y) / (vj.y - vi.y) + vi.x))
-			result = !result;
-	}
-	return result;
-}
-
-GLfloat MathHelp::polygonArea(geom::Poly* poly)
-{
-	GLfloat area = 0.0f;
-	std::vector<glm::vec2>& vertices = poly->vertices;
-	UINT count = static_cast<UINT>(vertices.size());
-	for (UINT i = 0; i < count - 1; i++)
-	{
-		area += vertices[i].x * vertices[i + 1].y - vertices[i + 1].x * vertices[i].y;
-	}
-	area += vertices[count - 1].x * vertices[0].y - vertices[0].x * vertices[count - 1].y;
-	return area * 0.5f;
-}
+//geom::Rect MathHelp::getBounds(glm::vec2* vertices, UINT count)
+//{
+//	GLfloat maxX = std::numeric_limits<GLfloat>::min();
+//	GLfloat minX = std::numeric_limits<GLfloat>::max();
+//	GLfloat maxY = std::numeric_limits<GLfloat>::min();
+//	GLfloat minY = std::numeric_limits<GLfloat>::max();
+//
+//	for (UINT i = 0; i < count; i++)
+//	{
+//		if (vertices[i].x > maxX)
+//			maxX = vertices[i].x;
+//		if (vertices[i].x < minX)
+//			minX = vertices[i].x;
+//		if (vertices[i].y > maxY)
+//			maxY = vertices[i].y;
+//		if (vertices[i].y < minY)
+//			minY = vertices[i].y;
+//	}
+//	glm::vec2 size = glm::vec2(maxX - minX, maxY - minY);
+//	glm::vec2 center = glm::vec2(minX, minY) + size * 0.5f;
+//
+//	return geom::Rect(center, size);
+//}
+//
+//std::vector<glm::vec2> MathHelp::generatePointCloud(geom::Poly* poly, UINT ptCount)
+//{
+//	// Just a rectangle hit or miss strategy. Maybe later I'll triangulate and actually calculate points inside the poly
+//	std::vector<glm::vec2> results;
+//	geom::Rect bounds = getBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
+//	glm::vec2 size = bounds.extent * 2.0f;
+//
+//	UINT maxUint = std::numeric_limits<UINT>::max();
+//	std::uniform_int_distribution<std::mt19937::result_type> random(0, maxUint);
+//	std::mt19937 rng = std::mt19937(time(NULL));
+//	while (results.size() < ptCount)
+//	{
+//		// Generate a random point
+//		// Generate random in 0, 1000
+//		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(random(rng)), static_cast<GLfloat>(random(rng)));
+//		// Change random to [-1, 1]
+//		newPt = newPt / (maxUint * 0.5f) - 1.0f;
+//		// Change random to [-(width or height) / 2, (width or height) / 2] and add center
+//		newPt = newPt * bounds.extent + bounds.pos;
+//
+//		// Check if the point lies in the polygon
+//		if (isPointInPolygon(poly, newPt))
+//			results.push_back(newPt);
+//	}
+//
+//	return results;
+//}
+//
+//bool MathHelp::isPointInPolygon(geom::Poly* poly, glm::vec2 pt)
+//{
+//	bool result = false;
+//	UINT len = static_cast<UINT>(poly->vertices.size());
+//	for (UINT i = 0, j = len - 1; i < len; j = i++)
+//	{
+//		glm::vec2& vi = poly->vertices[i];
+//		glm::vec2& vj = poly->vertices[j];
+//		if ((vi.y > pt.y) != (vj.y > pt.y) && (pt.x < (vj.x - vi.x) * (pt.y - vi.y) / (vj.y - vi.y) + vi.x))
+//			result = !result;
+//	}
+//	return result;
+//}
+//
+//GLfloat MathHelp::polygonArea(geom::Poly* poly)
+//{
+//	GLfloat area = 0.0f;
+//	std::vector<glm::vec2>& vertices = poly->vertices;
+//	UINT count = static_cast<UINT>(vertices.size());
+//	for (UINT i = 0; i < count - 1; i++)
+//	{
+//		area += vertices[i].x * vertices[i + 1].y - vertices[i + 1].x * vertices[i].y;
+//	}
+//	area += vertices[count - 1].x * vertices[0].y - vertices[0].x * vertices[count - 1].y;
+//	return area * 0.5f;
+//}
 
 glm::mat2 MathHelp::outer(glm::vec2 a, glm::vec2 b)
 {

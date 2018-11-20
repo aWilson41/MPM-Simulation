@@ -11,5 +11,5 @@ void main()
 	normal = inNormal;
 
     // Calculate vertex position in screen space
-    gl_Position = mvp_matrix * vec4(inPos, 1.0);
+	gl_Position = mvp_matrix * vec4(inPos, 1.0);
 }

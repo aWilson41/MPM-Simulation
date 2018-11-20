@@ -1,19 +1,13 @@
-#include <QApplication>
-#include <QLabel>
-#include <QSurfaceFormat>
-
-#include "MainWidget.h"
+#include "App.h"
 
 int main(int argc, char *argv[])
 {
-	QApplication app(argc, argv);
-	QSurfaceFormat format;
-	format.setDepthBufferSize(32);
-	format.setSamples(4);
-	format.setRenderableType(QSurfaceFormat::OpenGL);
-	QSurfaceFormat::setDefaultFormat(format);
-	app.setApplicationName("MPM Sim");
-	MainWidget widget;
-	widget.show();
-	return app.exec();
+	App app;
+
+	while (app.isActive())
+	{
+		app.loop();
+	}
+
+	return 1;
 }
