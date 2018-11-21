@@ -6,6 +6,8 @@ namespace Shaders
 {
 	static std::map<std::string, ShaderProgram> shaders;
 
+	static ShaderProgram* getShader(std::string name) { return &shaders[name]; }
+
 	// Initialize some basic shaders
 	static void initShaders()
 	{

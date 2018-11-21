@@ -57,7 +57,7 @@ public:
 		glLinkProgram(programID);
 
 		glDeleteShader(vertexShaderID);
-		glDeleteShader(fragShaderID); // ?
+		glDeleteShader(fragShaderID);
 
 		GLint link_ok = GL_FALSE;
 		glGetProgramiv(programID, GL_LINK_STATUS, &link_ok);
@@ -99,6 +99,8 @@ public:
 		glDeleteShader(fragShaderID);
 		glDeleteProgram(programID);
 	}
+
+	GLuint getProgramID() { return programID; }
 
 protected:
 	GLuint programID = -1;

@@ -1,45 +1,75 @@
-#include "App.h"
-#include "Engine/Shaders.h"
+#include "RenderWindow.h"
+#include "Renderer.h"
+#include <gl/glew.h>
 #include <GLFW/glfw3.h>
 
-//#include "Engine/Geometry.h"
-//#include "Engine/Material.h"
-//#include "Engine/PointCloud.h"
-//#include "Engine/Primitives.h"
-//#include "MPMGrid.h"
-//#include "Particle.h"
-
-App::App()
+RenderWindow::RenderWindow()
 {
-	context.initGLFW();
+	glfwSetErrorCallback(errorCallback);
+
+	if (!glfwInit())
+		throw std::runtime_error("Failed to initialise GLFW");
+
+	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	//glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // Headless window to begin with
+
 	const GLFWvidmode* vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	context.createWindow("MPM Simulation", static_cast<int>(vidMode->width * 0.85), static_cast<int>(vidMode->height * 0.85));
-	Shaders::initShaders();
-
-	// Update the mouse position to the current mouse position
-	//QPoint mousePt = mapFromGlobal(QCursor::pos());
-	//mousePos = glm::vec2(static_cast<GLfloat>(mousePt.x()), static_cast<GLfloat>(mousePt.y()));
-
-	//// Initialize the camera
-	//cam.init(mousePos);
+	createWindow(windowName, static_cast<int>(vidMode->width * 0.85), static_cast<int>(vidMode->height * 0.85));
 }
 
-App::~App()
+void RenderWindow::stop() { glfwTerminate(); }
+
+void RenderWindow::createWindow(std::string windowName, int windowWidth, int windowHeight)
 {
-	Shaders::deleteShaders();
+	window = glfwCreateWindow(windowWidth, windowHeight, windowName.c_str(), nullptr, nullptr);
+
+	if (!window)
+	{
+		glfwTerminate();
+		throw std::runtime_error("Failed to create window with GLFW");
+	}
+
+	glfwMakeContextCurrent(window);
+	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetWindowSizeCallback(window, windowResize);
+
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK)
+	{
+		glfwTerminate();
+		throw std::runtime_error("Failed to initialize GLEW");
+	}
 }
 
-void App::init()
-{
+bool RenderWindow::isActive() { return !glfwWindowShouldClose(window); }
 
+void RenderWindow::setWindowName(std::string name)
+{
+	windowName = name;
+	glfwSetWindowTitle(window, windowName.c_str());
 }
 
-void App::loop()
+void RenderWindow::windowResize(GLFWwindow* window, int width, int height)
 {
+	//printf("test\n");
+}
+
+void RenderWindow::render()
+{
+	if (window == nullptr || ren == nullptr)
+		return;
+
 	glClearColor(0.5f, 0.3f, 0.25f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	context.loop();
+	ren->render();
+
+	glfwSwapBuffers(window);
+	glfwPollEvents();
 }
 //
 //void App::initializeGL()
