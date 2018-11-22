@@ -4,7 +4,7 @@
 #include "Engine/Renderer.h"
 #include "Engine/RenderWindow.h"
 #include "Engine/Shaders.h"
-#include "TrackballCameraInteractor.h"
+#include "Engine/TrackballCameraInteractor.h"
 
 int main(int argc, char *argv[])
 {
