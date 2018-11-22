@@ -2,8 +2,8 @@
 uniform mat4 mvp_matrix;
 
 in vec3 inPos;
-in vec2 inColor;
 in vec3 inNormal;
+//in vec2 inColor;
 
 smooth out vec3 normal;
 

@@ -7,19 +7,19 @@ struct VertexData
 	VertexData()
 	{
 		pos = glm::vec3(0.0f);
-		texCoords = glm::vec2(0.0f);
 		normal = glm::vec3(0.0f);
+		//texCoords = glm::vec2(0.0f);
 	}
-	VertexData(glm::vec3 vertex, glm::vec2 texCoords, glm::vec3 normal)
+	VertexData(glm::vec3 vertex, glm::vec3 normal)//, glm::vec2 texCoords)
 	{
 		VertexData::pos = vertex;
-		VertexData::texCoords = texCoords;
 		VertexData::normal = normal;
+		//VertexData::texCoords = texCoords;
 	}
 
 	glm::vec3 pos;
-	glm::vec2 texCoords;
 	glm::vec3 normal;
+	//glm::vec2 texCoords;
 };
 
 class Triangle

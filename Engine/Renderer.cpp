@@ -10,6 +10,11 @@ Renderer::Renderer()
 Renderer::~Renderer()
 {
 	Shaders::deleteShaders();
+
+	for (UINT i = 0; i < materials.size(); i++)
+	{
+		delete materials[i];
+	}
 }
 
 void Renderer::render()

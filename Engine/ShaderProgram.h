@@ -6,6 +6,14 @@
 class ShaderProgram
 {
 public:
+	ShaderProgram(std::string name)
+	{
+		shaderName = name;
+	}
+
+public:
+	std::string getName() { return shaderName; }
+
 	std::string readShaderFile(std::string filePath)
 	{
 		// Read the shader
@@ -42,6 +50,8 @@ public:
 			printShaderError(shaderID);
 			glDeleteShader(shaderID);
 		}
+		/*else
+			printf((filePath + " compiled OK.\n").c_str());*/
 	}
 	void compileProgram()
 	{
@@ -51,7 +61,7 @@ public:
 		vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 		compileShader(vertexShaderSrc.c_str(), vertexShaderID, vertexFileName);
 
-		GLuint programID = glCreateProgram();
+		programID = glCreateProgram();
 		glAttachShader(programID, vertexShaderID);
 		glAttachShader(programID, fragShaderID);
 		glLinkProgram(programID);
@@ -67,6 +77,8 @@ public:
 			printLinkerError(programID);
 			glDeleteProgram(programID);
 		}
+		//else
+		//	printf("Shader linked OK.\n");
 	}
 
 	void printShaderError(GLuint shaderID)
@@ -103,6 +115,7 @@ public:
 	GLuint getProgramID() { return programID; }
 
 protected:
+	std::string shaderName = "none";
 	GLuint programID = -1;
 	GLuint vertexShaderID = -1;
 	GLuint fragShaderID = -1;
