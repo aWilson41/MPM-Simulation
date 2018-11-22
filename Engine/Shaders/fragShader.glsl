@@ -15,6 +15,6 @@ out vec4 fColor;
 void main()
 {
 	vec3 color = clamp(dot(lightDir, normal) * mat.diffuseColor + mat.ambientColor, 0.0f, 1.0f);
-	fColor = vec4(color, 1.0);
+	fColor = vec4(color, 1.0f);
 	//fColor = vec4(normal, 1.0);
 }

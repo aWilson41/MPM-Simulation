@@ -12,14 +12,20 @@ RenderWindow::RenderWindow()
 		throw std::runtime_error("Failed to initialise GLFW");
 
 	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_DEPTH_BITS, 16);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	//glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // Headless window to begin with
+	//glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
 
 	const GLFWvidmode* vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	createWindow(windowName, static_cast<int>(vidMode->width * 0.85), static_cast<int>(vidMode->height * 0.85));
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_MULTISAMPLE);
+	glDisable(GL_CULL_FACE);
+	glDepthFunc(GL_LESS);
 }
 
 void RenderWindow::stop() { glfwTerminate(); }
@@ -30,7 +36,7 @@ void RenderWindow::render()
 		return;
 
 	glClearColor(0.5f, 0.3f, 0.25f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ren->render();
 

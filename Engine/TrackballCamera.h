@@ -8,7 +8,7 @@ class TrackballCamera : public Camera
 public:
 	TrackballCamera() { reset(); }
 
-	void initTrackballCamera(glm::vec2 pos, GLfloat phi, GLfloat theta, GLfloat rho, 
+	void initTrackballCamera(GLfloat phi, GLfloat theta, GLfloat rho, 
 		GLfloat fov, GLfloat aspectRatio, GLfloat nearZ, GLfloat farZ)
 	{
 		TrackballCamera::phi = phi;
@@ -21,8 +21,8 @@ public:
 	// Resets to defaults
 	void reset() override
 	{
-		initTrackballCamera(glm::vec2(0.0f), 1.4f, 1.57f, 60.0f, 
-			45.0f, 16.0f / 9.0f, 0.001f, 10000.0f);
+		initTrackballCamera(1.4f, 1.57f, 60.0f, 
+			45.0f, 16.0f / 9.0f, 0.0001f, 100000.0f);
 	}
 
 	// Maps 2d mouse coordinates to spherical coordinates
@@ -47,7 +47,6 @@ public:
 		theta += diff.x * rotateSpeed;
 		phi -= diff.y * rotateSpeed;
 
-		// Clamp
 		phi = MathHelp::clamp(phi, 0.01f, 3.14f);
 		updateCam();
 	}
@@ -58,8 +57,8 @@ public:
 		// Up and right are the directions to pan when camera is facing forward
 		glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
 		glm::mat3 invView = glm::inverse(view);
-		glm::vec3 dx = invView * right;
 		glm::vec3 dy = invView * up;
+		glm::vec3 dx = invView * right;
 
 		// Scale shift with scale so shift is relative to how far you are zoomed out
 		GLfloat r = std::pow(1.2f, rho);
@@ -76,8 +75,12 @@ public:
 	void setPhi(GLfloat phi) { TrackballCamera::phi = phi; }
 	void setTheta(GLfloat theta) { TrackballCamera::theta = theta; }
 	void setRho(GLfloat rho) { TrackballCamera::rho = rho; }
+	// Default is 4.0f
 	void setRotateSpeed(GLfloat speed) { rotateSpeed = speed; }
+	// Default is 0.025f
 	void setShiftSpeed(GLfloat speed) { shiftSpeed = speed; }
+	// Default is 0.5f
+	void setZoomSpeed(GLfloat speed) { zoomSpeed = speed; }
 
 	GLfloat getPhi() { return phi; }
 	GLfloat getTheta() { return theta; }
@@ -90,7 +93,7 @@ protected:
 	GLfloat theta = 1.57f;
 	GLfloat rho = 60.0f;
 
-	GLfloat rotateSpeed = 0.008f;
-	GLfloat shiftSpeed = 0.000025f;
-	GLfloat zoomSpeed = 1.0f;
+	GLfloat rotateSpeed = 4.0f;
+	GLfloat shiftSpeed = 0.025f;
+	GLfloat zoomSpeed = 0.5f;
 };

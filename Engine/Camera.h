@@ -43,9 +43,9 @@ public:
 
 public:
 	// Camera view matrix
-	glm::mat4 view = I;
+	glm::mat4 view = glm::mat4(1.0f);
 	// Camera projection matrix
-	glm::mat4 proj = I;
+	glm::mat4 proj = glm::mat4(1.0f);
 	// Eye position
 	glm::vec3 eyePos = glm::vec3(1.0f);
 	// Focal point

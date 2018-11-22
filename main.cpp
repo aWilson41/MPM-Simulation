@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	mapper.setShaderProgram(Shaders::getShader("Norm Shader"));
 	mapper.setInput(plane.getOutput());
 	mapper.setMaterial(ren.getMaterial(0));
-	mapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, -85.0f, 0.0f) * MathHelp::matrixScale(1000.0f));
+	mapper.setModelMatrix(/*MathHelp::matrixTranslate(0.0f, -85.0f, 0.0f) * */MathHelp::matrixScale(1000.0f));
 	mapper.update();
 	ren.addRenderItem(&mapper);
 

@@ -31,6 +31,7 @@ protected:
 	Material* material = nullptr;
 	glm::mat4 model = glm::mat4(1.0f);
 	GLuint vboID = -1;
+	GLuint vaoID = -1;
 
 	ShaderProgram* shaderProgram = nullptr;
 };
