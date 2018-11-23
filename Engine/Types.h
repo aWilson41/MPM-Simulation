@@ -8,6 +8,7 @@ enum ScalarType
 	DOUBLE_T = 3
 };
 
+// Typedef the call with the type
 #define TemplateMacroCase(typeN, type, call) \
 	case typeN: { typedef type TT; call; }; break
 #define TemplateMacro(call) \

@@ -9,8 +9,7 @@ smooth out vec3 normal;
 
 void main()
 {
-	normal = inNormal;
-
     // Calculate vertex position in screen space
 	gl_Position = mvp_matrix * vec4(inPos, 1.0);
+	normal = inNormal;
 }

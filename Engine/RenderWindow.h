@@ -13,6 +13,7 @@ public:
 	~RenderWindow() { stop(); }
 
 public:
+	void start();
 	void stop();
 	void render();
 	bool isActive();

@@ -5,6 +5,8 @@
 #include "Engine/RenderWindow.h"
 #include "Engine/Shaders.h"
 #include "Engine/TrackballCameraInteractor.h"
+#include "Engine/PNGReader.h"
+#include "Engine/ImageMapper.h"
 
 int main(int argc, char *argv[])
 {
@@ -34,21 +36,23 @@ int main(int argc, char *argv[])
 	plane.update();
 
 	PolyDataMapper mapper;
-	mapper.setShaderProgram(Shaders::getShader("Norm Shader"));
 	mapper.setInput(plane.getOutput());
 	mapper.setMaterial(ren.getMaterial(0));
-	mapper.setModelMatrix(/*MathHelp::matrixTranslate(0.0f, -85.0f, 0.0f) * */MathHelp::matrixScale(1000.0f));
+	mapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, -1.0f, 0.0f) * MathHelp::matrixScale(20.0f));
 	mapper.update();
 	ren.addRenderItem(&mapper);
 
+	PNGReader reader;
+	reader.setFileName("C:/Users/Andx_/Desktop/test.png");
+	reader.update();
 
-	// Update loop
-	while (renWindow.isActive())
-	{
-		// Do stuff
+	ImageMapper imageMapper;
+	imageMapper.setInput(reader.getOutput());
+	imageMapper.setModelMatrix(MathHelp::matrixScale(10.0f));
+	imageMapper.update();
+	ren.addRenderItem(&imageMapper);
 
-		renWindow.render();
-	}
+	renWindow.start();
 
 	return 1;
 }

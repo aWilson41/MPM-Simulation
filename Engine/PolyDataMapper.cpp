@@ -4,17 +4,23 @@
 #include "PolyData.h"
 #include "Renderer.h"
 #include "ShaderProgram.h"
+#include "Shaders.h"
 #include <GL/glew.h>
 
 PolyDataMapper::~PolyDataMapper()
 {
+	glUseProgram(0);
+	glDeleteVertexArrays(1, &vaoID);
 	glDeleteBuffers(1, &vboID);
 }
 
 void PolyDataMapper::update()
 {
+	if (shaderProgram == nullptr)
+		shaderProgram = Shaders::getShader("Norm Shader");
+
 	// Initialize if it hasn't been created
-	if (vboID == -1)
+	if (vaoID == -1)
 	{
 		// Generate the buffer, bind, then set data
 		glGenBuffers(1, &vboID);
@@ -29,28 +35,37 @@ void PolyDataMapper::update()
 		GLuint shaderID = shaderProgram->getProgramID();
 		GLuint posAttribLocation = glGetAttribLocation(shaderID, "inPos");
 		glEnableVertexAttribArray(posAttribLocation);
-		glVertexAttribPointer(glGetAttribLocation(shaderID, "inPos"), 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)0);
+		glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)0);
 
 		// Normal
 		GLuint normalAttribLocation = glGetAttribLocation(shaderID, "inNormal");
 		glEnableVertexAttribArray(normalAttribLocation);
-		glVertexAttribPointer(glGetAttribLocation(shaderID, "inNormal"), 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)(sizeof(glm::vec3)));
+		glVertexAttribPointer(normalAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)(sizeof(glm::vec3)));
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
-	// If it has been created it still may not be useable
-	/*else
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-		glBufferData(GL_ARRAY_BUFFER, polyData->getNumOfPoints() * sizeof(VertexData), polyData->getData(), GL_STATIC_DRAW);
-	}*/
 }
 
 void PolyDataMapper::draw(Renderer* ren)
 {
-	if (polyData == nullptr || vboID == -1)
+	if (polyData == nullptr || vaoID == -1)
 		return;
+
+	// Save the polygon mode
+	GLint polyMode;
+	glGetIntegerv(GL_POLYGON_MODE, &polyMode);
+
+	// Set the polygon mode needed
+	if (representation == TRIANGLEREP)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	else if (representation == LINEREP)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else if (representation == POINTREP)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+		glPointSize(pointSize);
+	}
 
 	// If the currently bound shader is diff bind the new one
 	if (shaderProgram != ren->getCurrentShaderProgram())
@@ -63,14 +78,15 @@ void PolyDataMapper::draw(Renderer* ren)
 
 	GLuint programId = shaderProgram->getProgramID();
 	glm::vec3 tmp = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
-	glUniform3f(glGetUniformLocation(programId, "lightDir"), tmp[0], tmp[1], tmp[2]);
+	glUniform3fv(glGetUniformLocation(programId, "lightDir"), 1, &tmp[0]);
 	glUniformMatrix4fv(glGetUniformLocation(programId, "mvp_matrix"), 1, GL_FALSE, &mvp[0][0]);
 	glUniform3f(glGetUniformLocation(programId, "mat.diffuseColor"), material->getDiffuse().r, material->getDiffuse().g, material->getDiffuse().b);
 	glUniform3f(glGetUniformLocation(programId, "mat.ambientColor"), material->getAmbient().r, material->getAmbient().g, material->getAmbient().b);
 
 	glBindVertexArray(vaoID);
-
 	glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(polyData->getNumOfPoints()));
-
 	glBindVertexArray(0);
+
+	// Set the poly mode back to what it was
+	glPolygonMode(GL_FRONT_AND_BACK, polyMode);
 }

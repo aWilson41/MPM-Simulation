@@ -17,11 +17,17 @@ namespace Shaders
 	// Initialize some basic shaders
 	void initShaders()
 	{
-		ShaderProgram* shader = new ShaderProgram("Norm Shader");
-		shader->loadVertexShader("Shaders/vertexShader.glsl");
-		shader->loadFragmentShader("Shaders/fragShader.glsl");
-		shader->compileProgram();
-		shaders.push_back(shader);
+		ShaderProgram* shader1 = new ShaderProgram("Norm Shader");
+		shader1->loadVertexShader("Shaders/vertexShader.glsl");
+		shader1->loadFragmentShader("Shaders/fragShader.glsl");
+		shader1->compileProgram();
+		shaders.push_back(shader1);
+
+		ShaderProgram* shader2 = new ShaderProgram("Image Shader");
+		shader2->loadVertexShader("Shaders/imageVertexShader.glsl");
+		shader2->loadFragmentShader("Shaders/imageFragShader.glsl");
+		shader2->compileProgram();
+		shaders.push_back(shader2);
 
 		//bool success = true;
 		//shaders["NormShader"] = new QOpenGLShaderProgram();

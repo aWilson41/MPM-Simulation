@@ -28,6 +28,15 @@ RenderWindow::RenderWindow()
 	glDepthFunc(GL_LESS);
 }
 
+void RenderWindow::start()
+{
+	// Update loop
+	while (isActive())
+	{
+		render();
+	}
+}
+
 void RenderWindow::stop() { glfwTerminate(); }
 
 void RenderWindow::render()
@@ -113,7 +122,7 @@ void RenderWindow::glfwMouseButton(GLFWwindow* window, int button, int action, i
 void RenderWindow::glfwScroll(GLFWwindow* window, double xoffset, double yoffset)
 {
 	RenderWindow* renWin = static_cast<RenderWindow*>(glfwGetWindowUserPointer(window));
-	renWin->getInteractor()->mouseScroll(yoffset);
+	renWin->getInteractor()->mouseScroll(static_cast<GLfloat>(yoffset));
 }
 //
 //void App::initializeGL()

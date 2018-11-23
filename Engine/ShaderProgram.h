@@ -66,6 +66,7 @@ public:
 		glAttachShader(programID, fragShaderID);
 		glLinkProgram(programID);
 
+		// We can delete the shaders after they're compiled and linked
 		glDeleteShader(vertexShaderID);
 		glDeleteShader(fragShaderID);
 

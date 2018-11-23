@@ -1,12 +1,11 @@
 #version 460
-
 uniform sampler2D tex;
 
-in varying vec2 vTexCoord;
+smooth in vec2 texCoord;
 
 out vec4 fColor;
 
 void main()
 {
-	fColor = texture2D(tex, vTexCoord).rgba;
+	fColor = texture2D(tex, texCoord);
 }

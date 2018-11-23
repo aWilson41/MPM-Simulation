@@ -11,6 +11,7 @@ file(GLOB CPP_FILES *.cpp)
 file(GLOB SHADER_FILES Engine/Shaders/*glsl)
 file(GLOB IMAGERSC *png)
 file(GLOB ENGINE_FILES Engine/*h Engine/*cpp)
+file(GLOB LODEPNG_FILES Engine/LodePNG/lodepng.h Engine/LodePNG/lodepng.cpp)
 
 # Find all the packages and stuff
 find_package(OpenGL REQUIRED)
@@ -30,7 +31,7 @@ find_path(EIGEN
 #include the directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${GLM}/glm ${GLEW}/include ${GLFW}/include ${EIGEN} ${OPENGL_INCLUDE_DIRS})
 
-add_executable(MPMSim WIN32 ${CPP_FILES} ${H_FILES} ${RESSrcs} ${IMAGERSC} ${SHADER_FILES} ${ENGINE_FILES})
+add_executable(MPMSim WIN32 ${CPP_FILES} ${H_FILES} ${RESSrcs} ${IMAGERSC} ${SHADER_FILES} ${ENGINE_FILES} ${LODEPNG_FILES})
 
 target_link_libraries(MPMSim 
 	debug ${GLEW}/lib/Release/x64/glew32.lib optimized ${GLEW}/lib/Release/x64/glew32.lib
@@ -59,3 +60,4 @@ add_custom_command(
 source_group("Engine" FILES ${ENGINE_FILES})
 source_group("Resources" FILES ${IMAGERSC})
 source_group("Engine\\Shaders" FILES ${SHADER_FILES})
+source_group("Engine\\LodePNG" FILES ${LODEPNG_FILES})
