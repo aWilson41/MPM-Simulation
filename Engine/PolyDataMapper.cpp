@@ -3,9 +3,7 @@
 #include "Material.h"
 #include "PolyData.h"
 #include "Renderer.h"
-#include "ShaderProgram.h"
 #include "Shaders.h"
-#include <GL/glew.h>
 
 PolyDataMapper::~PolyDataMapper()
 {

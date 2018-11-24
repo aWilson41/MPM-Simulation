@@ -1,12 +1,12 @@
+#include "Engine/ImageMapper.h"
 #include "Engine/Material.h"
+#include "Engine/PNGReader.h"
 #include "Engine/PolyDataMapper.h"
 #include "Engine/Primitives.h"
 #include "Engine/Renderer.h"
 #include "Engine/RenderWindow.h"
-#include "Engine/Shaders.h"
 #include "Engine/TrackballCameraInteractor.h"
-#include "Engine/PNGReader.h"
-#include "Engine/ImageMapper.h"
+//#include <chrono>
 
 int main(int argc, char *argv[])
 {
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	PolyDataMapper mapper;
 	mapper.setInput(plane.getOutput());
 	mapper.setMaterial(ren.getMaterial(0));
-	mapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, -1.0f, 0.0f) * MathHelp::matrixScale(20.0f));
+	mapper.setModelMatrix(MathHelp::matrixScale(500.0f));
 	mapper.update();
 	ren.addRenderItem(&mapper);
 
@@ -48,11 +48,31 @@ int main(int argc, char *argv[])
 
 	ImageMapper imageMapper;
 	imageMapper.setInput(reader.getOutput());
-	imageMapper.setModelMatrix(MathHelp::matrixScale(10.0f));
 	imageMapper.update();
 	ren.addRenderItem(&imageMapper);
+	 
+	PNGReader reader1;
+	reader1.setFileName("C:/Users/Andx_/Desktop/awesomeface.png");
+	reader1.update();
+	ImageMapper imageMapper1;
+	imageMapper1.setInput(reader1.getOutput());
+	imageMapper1.setModelMatrix(MathHelp::matrixTranslate(0.0f, 0.0f, 10.0f));
+	imageMapper1.update();
+	ren.addRenderItem(&imageMapper1);
 
-	renWindow.start();
+	// Update loop
+	while (renWindow.isActive())
+	{
+		//auto start = std::chrono::steady_clock::now();
+
+		renWindow.render();
+
+		//auto end = std::chrono::steady_clock::now();
+		//// In seconds
+		//double frameTime = std::chrono::duration<double, std::milli>(end - start).count() / 1000.0;
+		//printf("Frame Time: %fs\n", frameTime);
+		//printf("FPS: %f\n", 1.0 / frameTime);
+	}
 
 	return 1;
 }

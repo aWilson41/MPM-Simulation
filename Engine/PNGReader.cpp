@@ -32,9 +32,9 @@ void PNGReader::update()
 	}
 
 	imageData = new ImageData();
-	static UINT dim[] = { width, height, 1 };
-	static double spacing[] = { 0.0, 0.0, 0.0 };
-	static double origin[] = { 0.0, 0.0, 0.0 };
+	UINT dim[] = { width, height, 1 };
+	double spacing[] = { 1.0, 1.0, 1.0 };
+	double origin[] = { 0.0, 0.0, 0.0 };
 	imageData->allocate2DImage(dim, spacing, origin, 3, ScalarType::UCHAR_T);
 	unsigned char* data = static_cast<unsigned char*>(imageData->getData());
 

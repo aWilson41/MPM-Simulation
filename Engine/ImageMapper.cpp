@@ -4,11 +4,7 @@
 #include "Primitives.h"
 #include "Renderer.h"
 #include "ImageData.h"
-#include "ShaderProgram.h"
 #include "Shaders.h"
-#include <GL/glew.h>
-
-#include "LodePNG/lodepng.h"
 
 ImageMapper::ImageMapper()
 {
@@ -27,12 +23,20 @@ void ImageMapper::update()
 	if (shaderProgram == nullptr)
 		shaderProgram = Shaders::getShader("Image Shader");
 
+	// Failed to get shader or has no input
+	if (shaderProgram == nullptr || imageData == nullptr)
+		return;
+
 	// Create the plane
+	// If it already exists delete it and recreate it
 	if (planeSource != nullptr)
 		delete planeSource;
-
 	planeSource = new PlaneSource();
 	planeSource->update();
+
+	// Plane is unit plane (-0.5, 0.5)
+	double* bounds = imageData->getBounds();
+	imageSizeMat = MathHelp::matrixScale(static_cast<GLfloat>(bounds[1] - bounds[0]), static_cast<GLfloat>(bounds[3] - bounds[2]), 1.0f) * MathHelp::matrixRotateX(-HALFPI);
 	
 	// Initialize if it hasn't been created
 	if (vaoID == -1)
@@ -102,7 +106,7 @@ void ImageMapper::draw(Renderer* ren)
 		glUseProgram(shaderProgram->getProgramID());
 	}
 
-	glm::mat4 mvp = ren->getCamera()->proj * ren->getCamera()->view * model;
+	glm::mat4 mvp = ren->getCamera()->proj * ren->getCamera()->view * model * imageSizeMat;
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram->getProgramID(), "mvp_matrix"), 1, GL_FALSE, &mvp[0][0]);
 	
 	glActiveTexture(GL_TEXTURE0);

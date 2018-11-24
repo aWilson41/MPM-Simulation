@@ -1,7 +1,6 @@
 #include "RenderWindow.h"
 #include "MouseInteractor.h"
 #include "Renderer.h"
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 RenderWindow::RenderWindow()
@@ -12,7 +11,7 @@ RenderWindow::RenderWindow()
 		throw std::runtime_error("Failed to initialise GLFW");
 
 	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_DEPTH_BITS, 16);
+	glfwWindowHint(GLFW_DEPTH_BITS, 24);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -23,6 +22,7 @@ RenderWindow::RenderWindow()
 	createWindow(windowName, static_cast<int>(vidMode->width * 0.85), static_cast<int>(vidMode->height * 0.85));
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_CLAMP);
 	glEnable(GL_MULTISAMPLE);
 	glDisable(GL_CULL_FACE);
 	glDepthFunc(GL_LESS);
@@ -89,6 +89,7 @@ void RenderWindow::createWindow(std::string windowName, int windowWidth, int win
 	glfwSetMouseButtonCallback(window, glfwMouseButton);
 	glfwSetScrollCallback(window, glfwScroll);
 	glfwSetWindowUserPointer(window, this);
+	glfwSwapInterval(0); // Turn off vsync
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)

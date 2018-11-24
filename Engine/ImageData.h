@@ -7,20 +7,12 @@ class ImageData
 {
 public:
 	ImageData() { }
-
-	~ImageData()
-	{
-		switch (type) 
-		{ 
-			TemplateMacro(deleteData(static_cast<TT>(0)));
-		default:
-			break;
-		}
-	}
+	~ImageData();
 
 	void allocate2DImage(UINT* dim, double* spacing, double* origin, UINT numComps, ScalarType type);
 
 	UINT* getDimensions() { return dim; }
+	double* getBounds() { return bounds; }
 	void* getData() { return data; }
 	
 	// Updates bounds given dimensions, spacing, & origin
@@ -28,10 +20,7 @@ public:
 
 protected:
 	template<class T>
-	void allocateData(T, int count) { data = new T[count]; }
-
-	template<class T>
-	void deleteData(T) { delete[] static_cast<T*>(data); }
+	void allocateData(T, UINT count) { data = new T[count]; }
 
 protected:
 	void* data = nullptr;

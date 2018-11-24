@@ -13,8 +13,8 @@ public:
 		// If the camera doesn't get initialized with the current mouse position 
 		// there will be a big jump when first mouse move is called
 		screenSize = glm::vec2(windowWidth, windowHeight);
-		cam->initTrackballCamera(1.4f, 1.57f, 38.0f, 
-			45.0f, static_cast<GLfloat>(windowWidth) / windowHeight, 0.0001f, 100000.0f);
+		cam->initTrackballCamera(1.4f, 1.57f, 65.0f, 
+			45.0f, static_cast<GLfloat>(windowWidth) / windowHeight, 0.1f, 10000.0f);
 		prevMousePos = mousePos = pos / screenSize;
 	}
 
@@ -37,7 +37,7 @@ public:
 	void windowResize(int width, int height) override
 	{
 		screenSize = glm::vec2(width, height);
-		cam->setPerspective(45.0f, static_cast<GLfloat>(width) / height, 0.0001f, 100000.0f);
+		cam->setPerspective(45.0f, static_cast<GLfloat>(width) / height, 0.1f, 10000.0f);
 	}
 
 protected:

@@ -29,6 +29,7 @@ protected:
 	ImageData* imageData = nullptr;
 	PlaneSource* planeSource = nullptr;
 	glm::mat4 model = glm::mat4(1.0f);
+	glm::mat4 imageSizeMat = glm::mat4(1.0f);
 	GLuint vboID = -1;
 	GLuint vaoID = -1;
 	GLuint texID = -1;
