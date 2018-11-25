@@ -23,7 +23,7 @@ void PolyDataMapper::update()
 		// Generate the buffer, bind, then set data
 		glGenBuffers(1, &vboID);
 		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-		glBufferData(GL_ARRAY_BUFFER, polyData->getNumOfPoints() * sizeof(VertexData), polyData->getData(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, polyData->getNumOfPoints() * sizeof(VertexData), polyData->getData(), GL_DYNAMIC_DRAW);
 
 		// Generate the vao
 		glGenVertexArrays(1, &vaoID);
@@ -42,6 +42,35 @@ void PolyDataMapper::update()
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
+
+		// Point polygon data can only be represented by points
+		CellType type = polyData->getCellType();
+		if (type == POINT)
+			representation = POINTREP;
+		// Line poly data can only be represented by points or lines
+		else if (type == LINE)
+		{
+			if (representation > LINEREP)
+				representation = LINEREP;
+		}
+	}
+	else
+	{
+		GLint bufferSize;
+		glBindBuffer(GL_ARRAY_BUFFER, vboID);
+		glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+		GLint targetSize = polyData->getNumOfPoints() * sizeof(VertexData);
+
+		// If the size hasn't changed don't reallocate
+		if (bufferSize == targetSize)
+			glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, polyData->getData());
+		else
+		{
+			// Orphan the data
+			glBufferData(GL_ARRAY_BUFFER, bufferSize, NULL, GL_DYNAMIC_DRAW);
+			// Reallocate
+			glBufferData(GL_ARRAY_BUFFER, bufferSize, polyData->getData(), GL_DYNAMIC_DRAW);
+		}
 	}
 }
 

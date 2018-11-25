@@ -15,15 +15,14 @@ const GLfloat TODEGREES = PI / 180.0f;
 const GLfloat TORADIANS = 180.0f / PI;
 const GLfloat BSPLINE_EPSILON = 1e-4f;
 const GLfloat MATRIX_EPSILON = 1e-6f;
-const glm::mat2 I = glm::mat2(1.0f);
+const glm::mat2 I2 = glm::mat2(1.0f);
 
 // Forward declartions
-//namespace geom
-//{
-//	class Rect;
-//	class Ray;
-//	class Poly;
-//}
+namespace geom2d
+{
+	class Rect;
+	class Poly;
+}
 
 class MathHelp
 {
@@ -69,14 +68,15 @@ public:
 	static glm::vec2 calculateCentroid(glm::vec2* vertices, UINT count);
 
 	// Calculates a bounding rectangle around the point set
-	//static geom::Rect getBounds(glm::vec2* vertices, UINT count);
+	static geom2d::Rect get2dBounds(glm::vec2* vertices, UINT count);
+	static geom2d::Rect get2dBounds(glm::vec3* vertices, UINT count);
 
 	// Generates a point cloud in a polygon
-	/*static std::vector<glm::vec2> generatePointCloud(geom::Poly* poly, UINT ptCount);
+	static std::vector<glm::vec3> generatePointCloud(geom2d::Poly* poly, UINT ptCount);
 
-	static bool isPointInPolygon(geom::Poly* poly, glm::vec2 pt);
+	static bool isPointInPolygon(geom2d::Poly* poly, glm::vec2 pt);
 
-	static GLfloat polygonArea(geom::Poly* poly);*/
+	static GLfloat polygonArea(geom2d::Poly* poly);
 
 	static GLfloat trace(glm::mat2 mat) { return mat[0][0] + mat[1][1]; }
 

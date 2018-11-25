@@ -1,7 +1,7 @@
 #include "ImageMapper.h"
 #include "Camera.h"
 #include "PolyData.h"
-#include "Primitives.h"
+#include "PlaneSource.h"
 #include "Renderer.h"
 #include "ImageData.h"
 #include "Shaders.h"
