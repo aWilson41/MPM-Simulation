@@ -1,6 +1,7 @@
 #pragma once
 #include "AbstractMapper.h"
 #include "MathHelper.h"
+#include "PolyData.h"
 
 class Material;
 class PolyData;
@@ -27,7 +28,12 @@ public:
 	PolyRep getPolyRepresentation() { return representation; }
 	GLfloat getPointSize() { return pointSize; }
 
-	void setInput(PolyData* input) { polyData = input; }
+	void setInput(PolyData* input)
+	{
+		if (polyData != nullptr)
+			delete polyData;
+		polyData = input;
+	}
 	void setShaderProgram(ShaderProgram* shaderProgram) { PolyDataMapper::shaderProgram = shaderProgram; }
 	void setMaterial(Material* material) { PolyDataMapper::material = material; }
 	void setModelMatrix(glm::mat4 model) { PolyDataMapper::model = model; }

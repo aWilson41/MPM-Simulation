@@ -29,6 +29,12 @@ namespace Shaders
 		shader2->compileProgram();
 		shaders.push_back(shader2);
 
+		ShaderProgram* shader3 = new ShaderProgram("GrayImage Shader");
+		shader3->loadVertexShader("Shaders/imageVertexShader.glsl");
+		shader3->loadFragmentShader("Shaders/grayscaleImageFragShader.glsl");
+		shader3->compileProgram();
+		shaders.push_back(shader3);
+
 		//bool success = true;
 		//shaders["NormShader"] = new QOpenGLShaderProgram();
 		//// Compile vertex shader

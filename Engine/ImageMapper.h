@@ -1,8 +1,8 @@
 #pragma once
 #include "AbstractMapper.h"
+#include "ImageData.h"
 #include "MathHelper.h"
 
-class ImageData;
 class PlaneSource;
 class ShaderProgram;
 
@@ -17,7 +17,12 @@ public:
 	ImageData* getInput() { return imageData; }
 	glm::mat4 getModelMatrix() { return model; }
 
-	void setInput(ImageData* data) { imageData = data; }
+	void setInput(ImageData* data)
+	{
+		if (imageData != nullptr)
+			delete imageData;
+		imageData = data;
+	}
 	void setModelMatrix(glm::mat4 model) { ImageMapper::model = model; }
 
 	// Updates the buffers to match the input data

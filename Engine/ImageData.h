@@ -14,6 +14,8 @@ public:
 	UINT* getDimensions() { return dim; }
 	double* getBounds() { return bounds; }
 	void* getData() { return data; }
+	UINT getNumComps() { return numComps; }
+	ScalarType getScalarType() { return type; }
 	
 	// Updates bounds given dimensions, spacing, & origin
 	void updateBounds();

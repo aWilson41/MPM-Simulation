@@ -13,8 +13,7 @@ void Particle::updateGradient(GLfloat dt)
 	defG = defGe * defGp;
 
 	// Anything over stretch ratio or compression ratio is dumped into plastic deformation
-
-	// Compute the SVD of the elastic deformation gradient defGe = U * s * v^T
+	// To do this compute the SVD of the elastic deformation gradient defGe = U * s * v^T
 	MathHelp::svd(defGe, &svdU, &s, &svdV);
 
 	// Clamp to remove the excess compression and stretch
@@ -26,8 +25,8 @@ void Particle::updateGradient(GLfloat dt)
 
 	// For plastic since F = Fe * Fp then Fp = [(Fe)^-1 * F] = [(u * s * v^T)^-1 * F] = (v * s^-1 * u^T) * F
 	defGp = MathHelp::diagProduct(svdV, glm::vec2(1.0f / s.x, 1.0f / s.y)) * glm::transpose(svdU) * defG;
-	
-	glm::mat2 test = defGp * defGe; // Both terms should still combine to make defG. The deformation didn't change, just can become more plastic
+
+	//glm::mat2 test = defGe * defGp; // Both terms should still combine to make defG. The deformation didn't change, just becomes more plastic
 }
 // Energy derivative
 glm::mat2 Particle::calcCauchyStress()
@@ -38,8 +37,8 @@ glm::mat2 Particle::calcCauchyStress()
 
 	// Plastic deformation contributes exponentially to hardening term
 	GLfloat hardening = std::exp(HARDENING * (1.0f - Jp));	
-	GLfloat lambda = shear * hardening;
-	GLfloat mu = bulk * hardening;
+	GLfloat lambda = bulk * hardening;
+	GLfloat mu = shear * hardening;
 
 	// Shearing term on left (achieved through polar decomposition to remove rigid rotational), compressional on the right
 	glm::mat2 defGe_r;

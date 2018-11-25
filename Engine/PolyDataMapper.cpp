@@ -107,8 +107,15 @@ void PolyDataMapper::draw(Renderer* ren)
 	glm::vec3 tmp = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
 	glUniform3fv(glGetUniformLocation(programId, "lightDir"), 1, &tmp[0]);
 	glUniformMatrix4fv(glGetUniformLocation(programId, "mvp_matrix"), 1, GL_FALSE, &mvp[0][0]);
-	glUniform3f(glGetUniformLocation(programId, "mat.diffuseColor"), material->getDiffuse().r, material->getDiffuse().g, material->getDiffuse().b);
-	glUniform3f(glGetUniformLocation(programId, "mat.ambientColor"), material->getAmbient().r, material->getAmbient().g, material->getAmbient().b);
+	glm::vec3 diffuse = glm::vec3(0.7f, 0.7f, 0.7f);
+	glm::vec3 ambient = glm::vec3(0.0f, 0.0f, 0.0f);
+	if (material != nullptr)
+	{
+		diffuse = material->getDiffuse();
+		ambient = material->getAmbient();
+	}
+	glUniform3fv(glGetUniformLocation(programId, "mat.diffuseColor"), 1, &diffuse[0]);
+	glUniform3fv(glGetUniformLocation(programId, "mat.ambientColor"), 1, &ambient[0]);
 
 	glBindVertexArray(vaoID);
 	glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(polyData->getNumOfPoints()));

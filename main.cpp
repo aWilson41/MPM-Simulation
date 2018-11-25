@@ -9,11 +9,13 @@
 #include "Engine/Renderer.h"
 #include "Engine/RenderWindow.h"
 #include "Engine/TrackballCameraInteractor.h"
+#include "Engine/ImageData.h"
 #include "MPMGrid.h"
 #include "Particle.h"
 //#include <chrono>
 
 void printIterationStats(MPMGrid* mpmGrid, UINT iter);
+void updateMapperWithGrid(MPMGrid* mpmGrid, ImageMapper* mapper);
 
 int main(int argc, char *argv[])
 {
@@ -30,7 +32,7 @@ int main(int argc, char *argv[])
 	Renderer ren;
 	ren.setCamera(&cam);
 	ren.addMaterial(new Material(glm::vec3(0.2f, 0.4f, 0.2f), 0.5f));
-	ren.addMaterial(new Material(glm::vec3(0.8f, 0.8f, 0.8f), 1.0f));
+	ren.addMaterial(new Material(glm::vec3(0.8f, 0.2f, 0.2f), 1.0f));
 	renWindow.setRenderer(&ren);
 
 	// Setup the camera and camera interactor
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
 	PolyDataMapper planeMapper;
 	planeMapper.setInput(plane.getOutput());
 	planeMapper.setMaterial(ren.getMaterial(0));
-	planeMapper.setModelMatrix(MathHelp::matrixScale(500.0f));
+	planeMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, -107.0f, 0.0f) * MathHelp::matrixScale(500.0f));
 	planeMapper.update();
 	ren.addRenderItem(&planeMapper);
 
@@ -54,10 +56,10 @@ int main(int argc, char *argv[])
 	geom2d::Poly circlePoly;
 	circlePoly.FromCircle(geom2d::Circle(0.0f, 115.0f, 100.0f), 25);
 	GLfloat circlePolyArea = circlePoly.area();
-	printf("Polygon Area:   %f\n", circlePolyArea);
 	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
-	printf("Particle Area:  %f\n", particleArea);
 	UINT particleCount = static_cast<UINT>(circlePolyArea / particleArea);
+	printf("Polygon Area:   %f\n", circlePolyArea);
+	printf("Particle Area:  %f\n", particleArea);
 	printf("Particle Count: %d\n", particleCount);
 	// Create a random distribution of points in this shape
 	std::vector<glm::vec3> results = MathHelp::generatePointCloud(&circlePoly, particleCount);
@@ -72,6 +74,7 @@ int main(int argc, char *argv[])
 		data[i].v1.pos = results[i];
 
 		particles[i].pos = &data[i].v1.pos; // Ref to avoid storing two copies
+		particles[i].mass = PARTICLE_MASS;
 		particles[i].bulk = BULK_MODULUS;
 		particles[i].shear = SHEAR_MODULUS;
 	}
@@ -86,11 +89,31 @@ int main(int argc, char *argv[])
 	// Setup the MPMGrid for simulation
 	geom2d::Rect bounds = MathHelp::get2dBounds(results.data(), particleCount);
 	MPMGrid mpmGrid;
-	GLfloat padScale = 4.0f;
+	GLfloat padScale = 2.0f;
 	glm::vec2 padSize = bounds.size() * padScale;
 	glm::vec2 origin = bounds.pos - padSize * 0.5f;
-	mpmGrid.initGrid(origin, padSize, 32, 32);
+	mpmGrid.initGrid(origin, padSize, 8, 8);
 	mpmGrid.initParticles(particles, particleCount);
+
+	// Setup a plane to draw the bounds of the simulation
+	PlaneSource boundsPlane;
+	boundsPlane.update();
+
+	PolyDataMapper boundsMapper;
+	boundsMapper.setModelMatrix(
+		MathHelp::matrixTranslate(bounds.pos.x, bounds.pos.y, 0.0f) * 
+		MathHelp::matrixScale(padSize.x, padSize.y, 1.0f) *
+		MathHelp::matrixRotateX(-HALFPI));
+	boundsMapper.setPolyRepresentation(PolyRep::LINEREP);
+	boundsMapper.setInput(boundsPlane.getOutput());
+	boundsMapper.setMaterial(ren.getMaterial(1));
+	boundsMapper.update();
+	ren.addRenderItem(&boundsMapper);
+
+	// Setup a background image for visualizing the node values
+	ImageMapper imageMapper;
+	imageMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, bounds.pos.y, -1.0f));
+	ren.addRenderItem(&imageMapper);
 #pragma endregion
 
 	// Update loop
@@ -99,10 +122,14 @@ int main(int argc, char *argv[])
 	{
 		//auto start = std::chrono::steady_clock::now();
 
-		mpmGrid.projectToGrid();
-		mpmGrid.update(TIMESTEP);
-		ptCloudMapper.update(); // Update buffers
-		printIterationStats(&mpmGrid, iter++);
+		for (UINT i = 0; i < 10; i++)
+		{
+			mpmGrid.projectToGrid();
+			mpmGrid.update(TIMESTEP);
+			ptCloudMapper.update(); // Update buffers
+			updateMapperWithGrid(&mpmGrid, &imageMapper);
+			//printIterationStats(&mpmGrid, iter++);
+		}
 
 		renWindow.render();
 
@@ -136,4 +163,32 @@ void printIterationStats(MPMGrid* mpmGrid, UINT iter)
 
 	printf("Max Node Velocity:                     %.*f\n", 10, mpmGrid->maxNodeVelocity);
 	printf("Max Node Force                         %.*f\n", 10, mpmGrid->maxNodeF);
+}
+
+void updateMapperWithGrid(MPMGrid* mpmGrid, ImageMapper* mapper)
+{
+	// Extract the mass into an image
+	ImageData* imageData = new ImageData();
+	UINT dim[3] = { static_cast<UINT>(mpmGrid->gridWidth), static_cast<UINT>(mpmGrid->gridHeight), 1 };
+	double spacing[3] = { mpmGrid->cellSize.x, mpmGrid->cellSize.y, 0.0 };
+	double origin[3] = { 0.0, 0.0, 0.0 };
+	imageData->allocate2DImage(dim, spacing, origin, 1, ScalarType::UCHAR_T);
+	unsigned char* data = static_cast<unsigned char*>(imageData->getData());
+
+	// Get the max mass
+	GLfloat max = 0.0f;
+	for (int i = 0; i < mpmGrid->gridHeight * mpmGrid->gridWidth; i++)
+	{
+		if (mpmGrid->nodes[i].mass > max)
+			max = mpmGrid->nodes[i].mass;
+	}
+	// Set the image values
+	GLfloat ratio = 255.0f / max;
+	for (int i = 0; i < mpmGrid->gridHeight * mpmGrid->gridWidth; i++)
+	{
+		data[i] = static_cast<unsigned char>(mpmGrid->nodes[i].mass * ratio);
+	}
+
+	mapper->setInput(imageData);
+	mapper->update();
 }

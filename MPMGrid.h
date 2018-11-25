@@ -26,7 +26,6 @@ public:
 
 	// Physical bounds and grid size
 	void initGrid(glm::vec2 origin, glm::vec2 size, int width, int height);
-	void initGrid(GLfloat x1, GLfloat x2, GLfloat y1, GLfloat y2, int width, int height);
 	// Sets the particles by intializing the mass of the grid and updating particle volumes/densities
 	void initParticles(Particle* particles, UINT count);
 
@@ -61,6 +60,7 @@ public:
 	int gridHeight;
 	int nodeCount;
 	glm::vec2 cellSize;
+	glm::vec2 invCellSize;
 
 	GLfloat maxParticleVelocity = 0.0f;
 	GLfloat maxParticleDefDet = 0.0f;

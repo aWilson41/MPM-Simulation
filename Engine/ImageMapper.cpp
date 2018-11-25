@@ -20,25 +20,36 @@ ImageMapper::~ImageMapper()
 
 void ImageMapper::update()
 {
-	if (shaderProgram == nullptr)
-		shaderProgram = Shaders::getShader("Image Shader");
-
 	// Failed to get shader or has no input
-	if (shaderProgram == nullptr || imageData == nullptr)
+	if (imageData == nullptr)
+		return;
+
+	UINT numComps = imageData->getNumComps();
+	UINT* dim = imageData->getDimensions();
+	if (numComps == 1)
+		shaderProgram = Shaders::getShader("GrayImage Shader");
+	else if (numComps == 3)
+		shaderProgram = Shaders::getShader("Image Shader");
+	else
 		return;
 
 	// Create the plane
 	// If it already exists delete it and recreate it
-	if (planeSource != nullptr)
-		delete planeSource;
-	planeSource = new PlaneSource();
-	planeSource->update();
+	if (planeSource == nullptr)
+	{
+		planeSource = new PlaneSource();
+		planeSource->update();
+	}
 
 	// Plane is unit plane (-0.5, 0.5)
 	double* bounds = imageData->getBounds();
-	imageSizeMat = MathHelp::matrixScale(static_cast<GLfloat>(bounds[1] - bounds[0]), static_cast<GLfloat>(bounds[3] - bounds[2]), 1.0f) * MathHelp::matrixRotateX(-HALFPI);
-	
-	// Initialize if it hasn't been created
+	glm::vec2 size = glm::vec2(static_cast<GLfloat>(bounds[1] - bounds[0]), static_cast<GLfloat>(bounds[3] - bounds[2]));
+	glm::vec2 cellSize = size / glm::vec2(dim[0], dim[1]);
+	// Center of border pixels is the boundary so add the cellSize
+	//imageSizeMat = MathHelp::matrixScale(size.x + cellSize.x, size.y + cellSize.y, 1.0f) * MathHelp::matrixRotateX(HALFPI);
+	imageSizeMat = MathHelp::matrixScale(size.x, size.y, 1.0f) * MathHelp::matrixRotateX(HALFPI);
+
+	// Setup the planes vbo if it hasn't already been created
 	if (vaoID == -1)
 	{
 		// Generate the buffer, bind, then set data
@@ -55,7 +66,7 @@ void ImageMapper::update()
 		GLuint posAttribLocation = glGetAttribLocation(shaderID, "inPos");
 		glEnableVertexAttribArray(posAttribLocation);
 		glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)0);
-		
+
 		GLint offset = sizeof(glm::vec3);
 
 		// Normal
@@ -71,19 +82,34 @@ void ImageMapper::update()
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
+	}
 
+	// Setup the texture if it hasn't already been created
+	if (texID == -1)
+	{
 		glGenTextures(1, &texID);
 		glBindTexture(GL_TEXTURE_2D, texID);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		
-		UINT* dim = imageData->getDimensions();
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, dim[0], dim[1], 0, GL_RGB, GL_UNSIGNED_BYTE, imageData->getData());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glUniform1i(glGetUniformLocation(shaderID, "tex"), 0);
+		if (numComps == 1)
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, dim[0], dim[1], 0, GL_RED, GL_UNSIGNED_BYTE, imageData->getData());
+		else if (numComps == 3)
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, dim[0], dim[1], 0, GL_RGB, GL_UNSIGNED_BYTE, imageData->getData());
+
+		glUniform1i(glGetUniformLocation(shaderProgram->getProgramID(), "tex"), 0);
+	}
+	// If it already has update the one in there
+	else
+	{
+		glBindTexture(GL_TEXTURE_2D, texID);
+		if (numComps == 1)
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, dim[0], dim[1], GL_RED, GL_UNSIGNED_BYTE, imageData->getData());
+		else if (numComps == 3)
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, dim[0], dim[1], GL_RGB, GL_UNSIGNED_BYTE, imageData->getData());
 	}
 }
 

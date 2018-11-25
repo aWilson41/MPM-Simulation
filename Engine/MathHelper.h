@@ -13,9 +13,9 @@ const GLfloat HALFPI = PI * 0.5f;
 const GLfloat TWOPI = PI * 2.0f;
 const GLfloat TODEGREES = PI / 180.0f;
 const GLfloat TORADIANS = 180.0f / PI;
-const GLfloat BSPLINE_EPSILON = 1e-4f;
-const GLfloat MATRIX_EPSILON = 1e-6f;
 const glm::mat2 I2 = glm::mat2(1.0f);
+const glm::mat3 I3 = glm::mat3(1.0f);
+const glm::mat4 I4 = glm::mat4(1.0f);
 
 // Forward declartions
 namespace geom2d
@@ -118,7 +118,7 @@ public:
 
 	static void setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11);
 
-	// Singular value decomp source = u * (s * I) * v^T
+	// Singular value decomp source = u * (s * Identity) * v^T
 	static void svd(glm::mat2x2 source, glm::mat2x2* u, glm::vec2* s, glm::mat2x2* v);
 
 	// Polar decomp but only returns the rotational
