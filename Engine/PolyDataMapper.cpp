@@ -34,7 +34,6 @@ void PolyDataMapper::update()
 		GLuint posAttribLocation = glGetAttribLocation(shaderID, "inPos");
 		glEnableVertexAttribArray(posAttribLocation);
 		glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)0);
-
 		// Normal
 		GLuint normalAttribLocation = glGetAttribLocation(shaderID, "inNormal");
 		glEnableVertexAttribArray(normalAttribLocation);

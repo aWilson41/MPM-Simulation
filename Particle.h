@@ -40,8 +40,8 @@ public:
 	glm::mat2 vG = glm::mat2(0.0f); // Velocity gradient
 
 	// Grid bounds
-	int startX = -1;
-	int endX = -1;
-	int startY = -1;
-	int endY = -1;
+	UINT startX = -1;
+	UINT endX = -1;
+	UINT startY = -1;
+	UINT endY = -1;
 };

@@ -101,7 +101,6 @@ public:
 	}
 
 protected:
-	//std::vector<Triangle> cellData;
 	Cell* data = nullptr;
 	UINT numPts = -1;
 	UINT numCells = -1;

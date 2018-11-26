@@ -44,9 +44,6 @@ void ImageMapper::update()
 	// Plane is unit plane (-0.5, 0.5)
 	double* bounds = imageData->getBounds();
 	glm::vec2 size = glm::vec2(static_cast<GLfloat>(bounds[1] - bounds[0]), static_cast<GLfloat>(bounds[3] - bounds[2]));
-	glm::vec2 cellSize = size / glm::vec2(dim[0], dim[1]);
-	// Center of border pixels is the boundary so add the cellSize
-	//imageSizeMat = MathHelp::matrixScale(size.x + cellSize.x, size.y + cellSize.y, 1.0f) * MathHelp::matrixRotateX(HALFPI);
 	imageSizeMat = MathHelp::matrixScale(size.x, size.y, 1.0f) * MathHelp::matrixRotateX(HALFPI);
 
 	// Setup the planes vbo if it hasn't already been created
@@ -66,19 +63,10 @@ void ImageMapper::update()
 		GLuint posAttribLocation = glGetAttribLocation(shaderID, "inPos");
 		glEnableVertexAttribArray(posAttribLocation);
 		glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)0);
-
-		GLint offset = sizeof(glm::vec3);
-
-		// Normal
-		/*GLuint normalAttribLocation = glGetAttribLocation(shaderID, "inNormal");
-		glEnableVertexAttribArray(normalAttribLocation);
-		glVertexAttribPointer(normalAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offset);*/
-
-		offset += sizeof(glm::vec3);
-
+		// Texture Coordinates
 		GLuint texAttribLocation = glGetAttribLocation(shaderID, "inTexCoord");
 		glEnableVertexAttribArray(texAttribLocation);
-		glVertexAttribPointer(texAttribLocation, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offset);
+		glVertexAttribPointer(texAttribLocation, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)(sizeof(glm::vec3) + sizeof(glm::vec3)));
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);

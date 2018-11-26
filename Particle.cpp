@@ -40,8 +40,8 @@ glm::mat2 Particle::calcCauchyStress()
 	GLfloat lambda = bulk * hardening;
 	GLfloat mu = shear * hardening;
 
-	// Shearing term on left (achieved through polar decomposition to remove rigid rotational), compressional on the right
+	// Shearing term on left (achieved through polar decomposition to remove rigid rotational from elastic deformation), compressional/bulk on the right
 	glm::mat2 defGe_r;
 	MathHelp::pd(defGe, &defGe_r);
-	return 2.0f * mu * (defG - defGe_r) * glm::transpose(defGe) + glm::mat2(lambda * (Je - 1.0f) * Je);
+	return 2.0f * mu * (defGe - defGe_r) * glm::transpose(defGe) + glm::mat2(lambda * (Je - 1.0f) * Je);
 }

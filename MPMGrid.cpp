@@ -196,7 +196,7 @@ void MPMGrid::updateParticleVelocities()
 	maxParticleVG = glm::mat2(0.0f);
 	maxParticleVelocity = 0.0f;
 #endif
-	const GLfloat invNodeArea = 1.0f / (cellSize.x * cellSize.y);
+	GLfloat invNodeArea = 1.0f / (cellSize.x * cellSize.y);
 	// We calculate both the pic and flip velocity and interpolate between the two
 	// We also calculate a velocity gradient to integrate the deformation gradient with
 	for (UINT i = 0; i < pointCount; i++)
@@ -212,7 +212,7 @@ void MPMGrid::updateParticleVelocities()
 			for (UINT x = p.startX; x < p.endX; x++)
 			{
 				UINT i = y * gridWidth + x;
-				const GridNode node = nodes[i];
+				GridNode node = nodes[i];
 				// Diff between particle's and grid nodes physical position, converted back to grid coordinates
 				glm::vec2 diff = (p.getPos() - node.pos) / cellSize;
 				GLfloat w = weight(diff);
@@ -288,15 +288,14 @@ void MPMGrid::collision(GLfloat* pos, glm::vec2& v, GLfloat dt)
 
 		if (collision)
 		{
-			printf("hit\n");
 			// If separating, do nothing
 			vn = glm::dot(v, normal);
 			if (vn >= 0)
 				continue;
 
-			//get tangential component of velocity
+			// Get tangent velocity by removing velocity in normal dir
 			vt = v - vn * normal;
-			// Until it surpasses this value don't let it move (static friction)
+			// Until vt surpasses this value don't let it move (static friction)
 			if (glm::length(vt) <= -0.5f * vn)
 			{
 				v = glm::vec3(0.0f);

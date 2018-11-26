@@ -15,7 +15,10 @@
 //#include <chrono>
 
 void printIterationStats(MPMGrid* mpmGrid, UINT iter);
+// Updates image with mass values from grid
 void updateMapperWithGrid(MPMGrid* mpmGrid, ImageMapper* mapper);
+// Updates particles with color attributes
+void updateMapperWithParticles(Particle* particles, PolyDataMapper* mapper);
 
 int main(int argc, char *argv[])
 {
@@ -92,7 +95,7 @@ int main(int argc, char *argv[])
 	GLfloat padScale = 2.0f;
 	glm::vec2 padSize = bounds.size() * padScale;
 	glm::vec2 origin = bounds.pos - padSize * 0.5f;
-	mpmGrid.initGrid(origin, padSize, 8, 8);
+	mpmGrid.initGrid(origin, padSize, 16, 16);
 	mpmGrid.initParticles(particles, particleCount);
 
 	// Setup a plane to draw the bounds of the simulation
@@ -122,7 +125,7 @@ int main(int argc, char *argv[])
 	{
 		//auto start = std::chrono::steady_clock::now();
 
-		for (UINT i = 0; i < 10; i++)
+		for (UINT i = 0; i < 3; i++)
 		{
 			mpmGrid.projectToGrid();
 			mpmGrid.update(TIMESTEP);
@@ -191,4 +194,9 @@ void updateMapperWithGrid(MPMGrid* mpmGrid, ImageMapper* mapper)
 
 	mapper->setInput(imageData);
 	mapper->update();
+}
+
+void updateMapperWithParticles(Particle* particles, PolyDataMapper* mapper)
+{
+	PolyData* polyData = mapper->getInput();
 }
