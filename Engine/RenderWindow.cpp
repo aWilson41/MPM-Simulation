@@ -26,6 +26,7 @@ RenderWindow::RenderWindow()
 	glEnable(GL_MULTISAMPLE);
 	glDisable(GL_CULL_FACE);
 	glDepthFunc(GL_LESS);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 }
 
 void RenderWindow::start()

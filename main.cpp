@@ -12,7 +12,7 @@
 #include "Engine/ImageData.h"
 #include "MPMGrid.h"
 #include "Particle.h"
-//#include <chrono>
+#include <chrono>
 
 void printIterationStats(MPMGrid* mpmGrid, UINT iter);
 // Updates image with mass values from grid
@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 
 	// Create the camera for the renderer to use
 	TrackballCamera cam;
+	cam.initTrackballCamera(1.4f, 1.57f, 30.0f);
 
 	// Create the renderer
 	Renderer ren;
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
 #pragma region Generate Particles and Grid
 	// Generate a 2d poly from a circle
 	geom2d::Poly circlePoly;
-	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 1.0f), 25);
+	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 0.25f), 25);
 	GLfloat circlePolyArea = circlePoly.area();
 	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
 	UINT particleCount = static_cast<UINT>(circlePolyArea / particleArea);
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
 	GLfloat padScale = 2.0f;
 	glm::vec2 padSize = bounds.size() * padScale;
 	glm::vec2 origin = bounds.pos - padSize * 0.5f;
-	mpmGrid.initGrid(origin, padSize, 16, 16);
+	mpmGrid.initGrid(origin, padSize, 8, 8);
 	mpmGrid.initParticles(particles, particleCount);
 
 	// Setup a plane to draw the bounds of the simulation
@@ -123,17 +124,22 @@ int main(int argc, char *argv[])
 	UINT iter = 0;
 	while (renWindow.isActive())
 	{
-		//auto start = std::chrono::steady_clock::now();
+		auto start = std::chrono::steady_clock::now();
 
-		for (UINT i = 0; i < 1; i++)
+		for (UINT i = 0; i < 1000; i++)
 		{
 			mpmGrid.projectToGrid();
 			mpmGrid.update(TIMESTEP);
-			ptCloudMapper.update(); // Update buffers
-			updateMassImage(&mpmGrid, &imageMapper);
-			printIterationStats(&mpmGrid, iter++);
+			//printIterationStats(&mpmGrid, iter++);
 		}
+		auto end = std::chrono::steady_clock::now();
+		printf("Sim Time: %fs\n", std::chrono::duration<double, std::milli>(end - start).count() / 1000.0);
 
+		iter += 1000;
+		printf("\nITERATION: %d\n", iter);
+
+		ptCloudMapper.update(); // Update buffers
+		updateMassImage(&mpmGrid, &imageMapper);
 		renWindow.render();
 
 		//auto end = std::chrono::steady_clock::now();

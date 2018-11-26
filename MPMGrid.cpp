@@ -126,7 +126,8 @@ void MPMGrid::initVelocities()
 				// Diff between particle's and grid nodes physical position, converted back to grid coordinates
 				glm::vec2 diff = (pPos - nodes[i].pos) * invCellSize;
 				nodes[i].velocity += p.velocity * p.mass * weight(diff);
-				//nodes[i].active = (nodes[i].mass != 0.0f); // As long as the mass isn't 0 it is active
+				// As long as the mass isn't 0 and it has some velocity it is active
+				nodes[i].active = (nodes[i].mass != 0.0f);
 			}
 		}
 	}
@@ -283,7 +284,7 @@ void MPMGrid::collision(GLfloat* pos, glm::vec2& v, GLfloat dt)
 	glm::vec2 vt = glm::vec2(0.0f);
 	GLfloat vn = 0.0f;
 
-	GLfloat bounds[4] = { origin.x, origin.x + size.x, origin.y + 0.2f, origin.y + size.y };
+	GLfloat bounds[4] = { origin.x, origin.x + size.x, origin.y + 0.1f, origin.y + size.y };
 	for (UINT i = 0; i < 2; i++)
 	{
 		collision = false;
@@ -353,10 +354,10 @@ void MPMGrid::update(GLfloat dt)
 	updateGridVelocities(dt);
 
 	// Solve velocities on node level (5)
-	/*for (int i = 0; i < nodeCount; i++)
+	for (int i = 0; i < nodeCount; i++)
 	{
-		collision(&nodes[i].pos[0], nodes[i].velocity, dt);
-	}*/
+		collision(&nodes[i].pos[0], nodes[i].newVelocity, dt);
+	}
 
 	// Calculates particle velocities from grid velocities (also calc velocity gradient)
 	updateParticleVelocities();
@@ -370,6 +371,8 @@ void MPMGrid::update(GLfloat dt)
 		particles[i].updatePos(dt);
 		if (particles[i].pos->x < bounds[0] || particles[i].pos->x > bounds[1] || particles[i].pos->y < bounds[2] || particles[i].pos->y > bounds[3])
 			printf("Particle outside bounds.\n");
+		if (!particles[i].inBounds)
+			printf("Particle outside buffer.\n");
 		// Update the deformation gradient using the velocity gradient (which was calculated from the velocity)
 		particles[i].updateGradient(dt);
 

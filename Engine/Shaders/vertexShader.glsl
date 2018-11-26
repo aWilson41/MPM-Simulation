@@ -5,10 +5,12 @@ in vec3 inPos;
 in vec3 inNormal;
 
 smooth out vec3 normal;
+out float gl_PointSize;
 
 void main()
 {
     // Calculate vertex position in screen space
 	gl_Position = mvp_matrix * vec4(inPos, 1.0);
 	normal = inNormal;
+	gl_PointSize = 10;
 }

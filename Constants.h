@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/MathHelper.h"
 
-static const GLfloat TIMESTEP = 0.01f;
+static const GLfloat TIMESTEP = 0.00001f;
 static const GLfloat FLIP_PERCENT = 0.95f; // Percent to mix pic and flip velocities on the particles
 
 static const GLfloat POSSIONS_RATIO = 0.2f;// 0.48f;
@@ -10,7 +10,7 @@ static const GLfloat BULK_MODULUS = YOUNGS_MODULUS * POSSIONS_RATIO / ((1.0f + P
 static const GLfloat SHEAR_MODULUS = YOUNGS_MODULUS / (2.0f * (1.0f + POSSIONS_RATIO)); // mu
 
 static const GLfloat PARTICLE_MASS = 100.0f;// 95.28f; // 930 kg / m^3 -> 95.28 kg / m^2
-static const GLfloat PARTICLE_DIAMETER = 0.1f; // Meters, This controls particle count
+static const GLfloat PARTICLE_DIAMETER = 0.04f; // Meters, This controls particle count
 
 // Increase energy given by plastic deformation
 static const GLfloat HARDENING = 10.0f;

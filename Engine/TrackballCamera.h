@@ -17,11 +17,23 @@ public:
 		setPerspective(fov, aspectRatio, nearZ, farZ);
 		updateCam();
 	}
+	void initTrackballCamera(GLfloat phi, GLfloat theta, GLfloat rho)
+	{
+		TrackballCamera::phi = phi;
+		TrackballCamera::theta = theta;
+		TrackballCamera::rho = rho;
+		updateCam();
+	}
+	void initTrackballCamera(GLfloat fov, GLfloat aspectRatio, GLfloat nearZ, GLfloat farZ)
+	{
+		setPerspective(fov, aspectRatio, nearZ, farZ);
+		updateCam();
+	}
 
 	// Resets to defaults
 	void reset() override
 	{
-		initTrackballCamera(1.4f, 1.57f, 60.0f, 
+		initTrackballCamera(1.4f, 1.57f, 35.0f, 
 			45.0f, 16.0f / 9.0f, 0.0001f, 100000.0f);
 	}
 
@@ -91,7 +103,7 @@ public:
 protected:
 	GLfloat phi = 1.4f;
 	GLfloat theta = 1.57f;
-	GLfloat rho = 60.0f;
+	GLfloat rho = 35.0f;
 
 	GLfloat rotateSpeed = 4.0f;
 	GLfloat shiftSpeed = 0.025f;
