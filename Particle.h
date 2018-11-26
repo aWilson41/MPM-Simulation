@@ -44,4 +44,5 @@ public:
 	UINT endX = -1;
 	UINT startY = -1;
 	UINT endY = -1;
+	bool inBounds = true;
 };

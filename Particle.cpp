@@ -25,8 +25,6 @@ void Particle::updateGradient(GLfloat dt)
 
 	// For plastic since F = Fe * Fp then Fp = [(Fe)^-1 * F] = [(u * s * v^T)^-1 * F] = (v * s^-1 * u^T) * F
 	defGp = MathHelp::diagProduct(svdV, glm::vec2(1.0f / s.x, 1.0f / s.y)) * glm::transpose(svdU) * defG;
-
-	//glm::mat2 test = defGe * defGp; // Both terms should still combine to make defG. The deformation didn't change, just becomes more plastic
 }
 // Energy derivative
 glm::mat2 Particle::calcCauchyStress()

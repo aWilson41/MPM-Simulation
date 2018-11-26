@@ -16,9 +16,9 @@
 
 void printIterationStats(MPMGrid* mpmGrid, UINT iter);
 // Updates image with mass values from grid
-void updateMapperWithGrid(MPMGrid* mpmGrid, ImageMapper* mapper);
+void updateMassImage(MPMGrid* mpmGrid, ImageMapper* mapper);
 // Updates particles with color attributes
-void updateMapperWithParticles(Particle* particles, PolyDataMapper* mapper);
+void updateParticleColors(Particle* particles, PolyDataMapper* mapper);
 
 int main(int argc, char *argv[])
 {
@@ -50,14 +50,14 @@ int main(int argc, char *argv[])
 	PolyDataMapper planeMapper;
 	planeMapper.setInput(plane.getOutput());
 	planeMapper.setMaterial(ren.getMaterial(0));
-	planeMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, -107.0f, 0.0f) * MathHelp::matrixScale(500.0f));
+	planeMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, -2.0f, 0.0f) * MathHelp::matrixScale(10.0f));
 	planeMapper.update();
 	ren.addRenderItem(&planeMapper);
 
 #pragma region Generate Particles and Grid
 	// Generate a 2d poly from a circle
 	geom2d::Poly circlePoly;
-	circlePoly.FromCircle(geom2d::Circle(0.0f, 115.0f, 100.0f), 25);
+	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 1.0f), 25);
 	GLfloat circlePolyArea = circlePoly.area();
 	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
 	UINT particleCount = static_cast<UINT>(circlePolyArea / particleArea);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 	mpmGrid.initParticles(particles, particleCount);
 
 	// Setup a plane to draw the bounds of the simulation
-	PlaneSource boundsPlane;
+	/*PlaneSource boundsPlane;
 	boundsPlane.update();
 
 	PolyDataMapper boundsMapper;
@@ -111,11 +111,11 @@ int main(int argc, char *argv[])
 	boundsMapper.setInput(boundsPlane.getOutput());
 	boundsMapper.setMaterial(ren.getMaterial(1));
 	boundsMapper.update();
-	ren.addRenderItem(&boundsMapper);
+	ren.addRenderItem(&boundsMapper);*/
 
 	// Setup a background image for visualizing the node values
 	ImageMapper imageMapper;
-	imageMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, bounds.pos.y, -1.0f));
+	imageMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, bounds.pos.y, -0.1f));
 	ren.addRenderItem(&imageMapper);
 #pragma endregion
 
@@ -125,13 +125,13 @@ int main(int argc, char *argv[])
 	{
 		//auto start = std::chrono::steady_clock::now();
 
-		for (UINT i = 0; i < 3; i++)
+		for (UINT i = 0; i < 1; i++)
 		{
 			mpmGrid.projectToGrid();
 			mpmGrid.update(TIMESTEP);
 			ptCloudMapper.update(); // Update buffers
-			updateMapperWithGrid(&mpmGrid, &imageMapper);
-			//printIterationStats(&mpmGrid, iter++);
+			updateMassImage(&mpmGrid, &imageMapper);
+			printIterationStats(&mpmGrid, iter++);
 		}
 
 		renWindow.render();
@@ -157,18 +157,17 @@ void printIterationStats(MPMGrid* mpmGrid, UINT iter)
 	printf("Max Particle Velocity Gradient Det:    %.*f\n", 10, mpmGrid->maxParticleVGDet);
 	printf("Max Particle Velocity Gradient: \n");
 	MathHelp::printMat(mpmGrid->maxParticleVG);
-	printf("Max Particle Energy Derivative Det:    %.*f\n", 10, mpmGrid->maxParticleEnergyDerivativeDet);
-	printf("Max Particle Energy Derivative: \n");
-	MathHelp::printMat(mpmGrid->maxParticleEnergyDerivative);
 
 	printf("Max Deformation Det:                   %.*f\n", 10, mpmGrid->maxParticleDefDet);
-	printf("Max Particle Velocity:                 %.*f\n", 10, mpmGrid->maxParticleVelocity);
+	printf("Max Particle Velocity:                 %.*f\n", 10, mpmGrid->maxParticleVelocityMag);
+	MathHelp::printVec(mpmGrid->maxParticleVelocity);
 
 	printf("Max Node Velocity:                     %.*f\n", 10, mpmGrid->maxNodeVelocity);
-	printf("Max Node Force                         %.*f\n", 10, mpmGrid->maxNodeF);
+	printf("Max Node Force                         %.*f\n", 10, mpmGrid->maxNodeForceMag);
+	MathHelp::printVec(mpmGrid->maxNodeForce);
 }
 
-void updateMapperWithGrid(MPMGrid* mpmGrid, ImageMapper* mapper)
+void updateMassImage(MPMGrid* mpmGrid, ImageMapper* mapper)
 {
 	// Extract the mass into an image
 	ImageData* imageData = new ImageData();
@@ -196,7 +195,7 @@ void updateMapperWithGrid(MPMGrid* mpmGrid, ImageMapper* mapper)
 	mapper->update();
 }
 
-void updateMapperWithParticles(Particle* particles, PolyDataMapper* mapper)
+void updateParticleColors(Particle* particles, PolyDataMapper* mapper)
 {
 	PolyData* polyData = mapper->getInput();
 }

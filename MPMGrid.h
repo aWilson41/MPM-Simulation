@@ -7,7 +7,16 @@ class GridNode
 {
 public:
 	GridNode() { }
-	GridNode(glm::vec2 pos) { GridNode::pos = pos; }
+	GridNode(glm::vec2 pos)
+	{
+		GridNode::pos = pos;
+		force = glm::vec2(0.0f);
+		velocity = glm::vec2(0.0f);
+		newVelocity = glm::vec2(0.0f);
+		force = glm::vec2(0.0f);
+		mass = 0.0f;
+		active = false;
+	}
 
 public:
 	GLfloat mass = 0.0f;
@@ -34,7 +43,7 @@ public:
 	void initMass();
 	// Calculates the velocities of the grid nodes given the particles
 	void initVelocities();
-	// Updates grid node velocities
+	// Calculates grid forces and updates grid node velocities
 	void updateGridVelocities(GLfloat dt);
 	// Particles velocities are updated according to the grid velocities
 	void updateParticleVelocities();
@@ -61,14 +70,17 @@ public:
 	int nodeCount;
 	glm::vec2 cellSize;
 	glm::vec2 invCellSize;
+	GLfloat bounds[4] = { -1.0f, -1.0f, -1.0f, -1.0f };
 
-	GLfloat maxParticleVelocity = 0.0f;
+	GLfloat maxParticleVelocityMag = 0.0f;
+	glm::vec2 maxParticleVelocity = glm::vec2(0.0f);
 	GLfloat maxParticleDefDet = 0.0f;
 	glm::mat2 maxParticleDef = glm::mat2(0.0f);
 	GLfloat maxParticleVGDet = 0.0f;
 	glm::mat2 maxParticleVG = glm::mat2(0.0f);
-	GLfloat maxNodeF = 0.0f;
-	GLfloat maxParticleEnergyDerivativeDet = 0.0f;
-	glm::mat2 maxParticleEnergyDerivative = glm::mat2(0.0f);
+	GLfloat maxNodeForceMag = 0.0f;
+	glm::vec2 maxNodeForce = glm::vec2(0.0f, 0.0f);
+	/*GLfloat maxParticleEnergyDerivativeDet = 0.0f;
+	glm::mat2 maxParticleEnergyDerivative = glm::mat2(0.0f);*/
 	GLfloat maxNodeVelocity = 0.0f;
 };

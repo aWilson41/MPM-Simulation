@@ -1,4 +1,4 @@
 # MPM-Simulation
-Note: Still doesn't work yet. Unstable, not sure why. Looked over it 100 times. Perhaps this is as stable as an explicit solve will get?
+Note: Still doesn't work yet. Unstable, not sure why.
 
-Material Point Method Simulation. Includes my own graphics abstraction. Requires GLEW, GLFW, GLM, and Eigen. Make the project with the CMakeLists.txt file.
+Material Point Method Simulation. Includes my own graphics abstraction (might give it it's own MIT licensed repo soon). Requires GLEW, GLFW, GLM, and Eigen. Make the project with the CMakeLists.txt file.
