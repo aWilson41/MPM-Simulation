@@ -1,11 +1,11 @@
 #pragma once
 #include "Engine/MathHelper.h"
 
-static const GLfloat TIMESTEP = 0.00001f;
+static const GLfloat TIMESTEP = 0.001f;
 static const GLfloat FLIP_PERCENT = 0.95f; // Percent to mix pic and flip velocities on the particles
 
 static const GLfloat POSSIONS_RATIO = 0.2f;// 0.48f;
-static const GLfloat YOUNGS_MODULUS = 1.4e5f; // Pa, N/m^2, N/m
+static const GLfloat YOUNGS_MODULUS = 1.4e5f; // Pa, J/m^2, N/m (in 3d it's really J/m^3)
 static const GLfloat BULK_MODULUS = YOUNGS_MODULUS * POSSIONS_RATIO / ((1.0f + POSSIONS_RATIO) * (1.0f - 2.0f * POSSIONS_RATIO)); // lambda
 static const GLfloat SHEAR_MODULUS = YOUNGS_MODULUS / (2.0f * (1.0f + POSSIONS_RATIO)); // mu
 

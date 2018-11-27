@@ -1,20 +1,21 @@
 #include "Constants.h"
 #include "Engine/Geometry2D.h"
+#include "Engine/ImageData.h"
 #include "Engine/ImageMapper.h"
 #include "Engine/Material.h"
 #include "Engine/PlaneSource.h"
 #include "Engine/PNGReader.h"
+#include "Engine/PNGWriter.h"
 #include "Engine/PolyData.h"
 #include "Engine/PolyDataMapper.h"
 #include "Engine/Renderer.h"
 #include "Engine/RenderWindow.h"
 #include "Engine/TrackballCameraInteractor.h"
-#include "Engine/ImageData.h"
 #include "MPMGrid.h"
 #include "Particle.h"
 #include <chrono>
 
-void printIterationStats(MPMGrid* mpmGrid, UINT iter);
+void printIterationStats(MPMGrid* mpmGrid);
 // Updates image with mass values from grid
 void updateMassImage(MPMGrid* mpmGrid, ImageMapper* mapper);
 // Updates particles with color attributes
@@ -122,21 +123,24 @@ int main(int argc, char *argv[])
 
 	// Update loop
 	UINT iter = 0;
+	const UINT subSteps = 1;
 	while (renWindow.isActive())
 	{
 		auto start = std::chrono::steady_clock::now();
-
-		for (UINT i = 0; i < 1000; i++)
+		for (UINT i = 0; i < subSteps; i++)
 		{
 			mpmGrid.projectToGrid();
 			mpmGrid.update(TIMESTEP);
-			//printIterationStats(&mpmGrid, iter++);
+			
 		}
 		auto end = std::chrono::steady_clock::now();
 		printf("Sim Time: %fs\n", std::chrono::duration<double, std::milli>(end - start).count() / 1000.0);
 
-		iter += 1000;
-		printf("\nITERATION: %d\n", iter);
+		iter++;
+		printf("ITERATION: %d\n", iter * subSteps);
+		printf("Frame: %d\n", iter);
+
+		printIterationStats(&mpmGrid);
 
 		ptCloudMapper.update(); // Update buffers
 		updateMassImage(&mpmGrid, &imageMapper);
@@ -146,6 +150,21 @@ int main(int argc, char *argv[])
 		//double frameTime = std::chrono::duration<double, std::milli>(end - start).count() / 1000.0; // In seconds
 		//printf("Frame Time: %fs\n", frameTime);
 		//printf("FPS: %f\n", 1.0 / frameTime);
+
+		// Grab and write the frame
+		/*GLint vp[4];
+		glGetIntegerv(GL_VIEWPORT, vp);
+		ImageData image;
+		UINT dim[3] = { vp[2], vp[3], 1 };
+		double spacing[3] = { 1.0, 1.0, 1.0 };
+		double origin[3] = { 0.0, 0.0, 0.0 };
+		image.allocate2DImage(dim, spacing, origin, 3, ScalarType::UCHAR_T);
+		glReadPixels(0, 0, dim[0], dim[1], GL_RGB, GL_UNSIGNED_BYTE, image.getData());
+
+		PNGWriter writer;
+		writer.setFileName("output/frame_" + std::to_string(iter) + ".png");
+		writer.setInput(&image);
+		writer.update();*/
 	}
 
 	delete[] particles;
@@ -153,10 +172,8 @@ int main(int argc, char *argv[])
 	return 1;
 }
 
-void printIterationStats(MPMGrid* mpmGrid, UINT iter)
+void printIterationStats(MPMGrid* mpmGrid)
 {
-	printf("\nITERATION: %d\n", iter);
-
 	printf("Max Particle Deformation Gradient Det: %.*f\n", 10, mpmGrid->maxParticleDefDet);
 	printf("Max Particle Deformation Gradient: \n");
 	MathHelp::printMat(mpmGrid->maxParticleDef);

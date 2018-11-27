@@ -11,7 +11,10 @@ PNGReader::~PNGReader()
 void PNGReader::update()
 {
 	if (fileName == "")
+	{
+		printf("PNGReader: No file name specified.\n");
 		return;
+	}
 
 	if (imageData != nullptr)
 		delete imageData;

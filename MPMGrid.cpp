@@ -365,7 +365,7 @@ void MPMGrid::update(GLfloat dt)
 	for (UINT i = 0; i < pointCount; i++)
 	{
 		// Solve velocities per particle
-		collision(&(*particles[i].pos)[0], particles[i].velocity, dt);
+		//collision(&(*particles[i].pos)[0], particles[i].velocity, dt);
 
 		// Update the particle position using the velocity
 		particles[i].updatePos(dt);
