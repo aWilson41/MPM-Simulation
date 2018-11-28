@@ -291,10 +291,9 @@ void MathHelp::svd(glm::mat2x2 source, glm::mat2x2* u, glm::vec2* s, glm::mat2x2
 {
 	Eigen::Matrix2f m;
 	m(0, 0) = source[0][0];
-	m(1, 0) = source[1][0];
-	m(0, 1) = source[0][1];
+	m(0, 1) = source[1][0];
+	m(1, 0) = source[0][1];
 	m(1, 1) = source[1][1];
-	//float test = m.determinant();
 	Eigen::JacobiSVD<Eigen::Matrix2f> svd(m, Eigen::ComputeFullU | Eigen::ComputeFullV);
 	Eigen::Matrix2f tmp1 = svd.matrixU();
 	(*u)[0][0] = tmp1(0, 0);

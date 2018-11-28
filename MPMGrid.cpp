@@ -333,7 +333,8 @@ void MPMGrid::update(GLfloat dt)
 	for (int i = 0; i < nodeCount; i++)
 	{
 		// Still working on this
-		collision(nodes[i].pos + nodes[i].newVelocity * cellSize * dt, nodes[i].newVelocity, dt);
+		// For small timesteps the velocities will be so small they will never be able to escape the cellSize
+		collision(nodes[i].pos + nodes[i].newVelocity * dt, nodes[i].newVelocity, dt);
 	}
 
 	// Calculates particle velocities from grid velocities (also calc velocity gradient)
