@@ -49,7 +49,7 @@ public:
 	void updateParticleVelocities();
 
 	// 3d pos used for 
-	void collision(GLfloat* pos, glm::vec2& v, GLfloat dt);
+	void collision(glm::vec2 pos, glm::vec2& v, GLfloat dt);
 
 	void projectToGrid();
 	void update(GLfloat dt);
@@ -74,12 +74,18 @@ public:
 
 	GLfloat maxParticleVelocityMag = 0.0f;
 	glm::vec2 maxParticleVelocity = glm::vec2(0.0f);
-	GLfloat maxParticleDefDet = 0.0f;
-	glm::mat2 maxParticleDef = glm::mat2(0.0f);
+
+	GLfloat maxParticleDefDete = 0.0f;
+	glm::mat2 maxParticleDefe = glm::mat2(0.0f);
+	GLfloat maxParticleDefDetp = 0.0f;
+	glm::mat2 maxParticleDefp = glm::mat2(0.0f);
+
 	GLfloat maxParticleVGDet = 0.0f;
 	glm::mat2 maxParticleVG = glm::mat2(0.0f);
+
 	GLfloat maxNodeForceMag = 0.0f;
 	glm::vec2 maxNodeForce = glm::vec2(0.0f, 0.0f);
+
 	/*GLfloat maxParticleEnergyDerivativeDet = 0.0f;
 	glm::mat2 maxParticleEnergyDerivative = glm::mat2(0.0f);*/
 	GLfloat maxNodeVelocity = 0.0f;

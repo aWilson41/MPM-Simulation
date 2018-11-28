@@ -24,55 +24,46 @@ void ImageMapper::update()
 	if (imageData == nullptr)
 		return;
 
-	UINT numComps = imageData->getNumComps();
-	UINT* dim = imageData->getDimensions();
-	if (numComps == 1)
-		shaderProgram = Shaders::getShader("GrayImage Shader");
-	else if (numComps == 3)
-		shaderProgram = Shaders::getShader("Image Shader");
-	else
+	pickShader();
+	// If one still wasn't picked then don't update
+	if (shaderProgram == nullptr)
 		return;
 
-	// Create the plane
-	// If it already exists delete it and recreate it
+	glUseProgram(shaderProgram->getProgramID());
+
+	// Create the plane if it doesn't exist
 	if (planeSource == nullptr)
 	{
 		planeSource = new PlaneSource();
 		planeSource->update();
 	}
 
-	// Plane is unit plane (-0.5, 0.5)
+	// Transform the plane the image goes on to be in the XY plane and be the size of the image
 	double* bounds = imageData->getBounds();
 	glm::vec2 size = glm::vec2(static_cast<GLfloat>(bounds[1] - bounds[0]), static_cast<GLfloat>(bounds[3] - bounds[2]));
 	imageSizeMat = MathHelp::matrixScale(size.x, size.y, 1.0f) * MathHelp::matrixRotateX(HALFPI);
 
-	// Setup the planes vbo if it hasn't already been created
+	// If the vao and vbo haven't been created yet
 	if (vaoID == -1)
 	{
-		// Generate the buffer, bind, then set data
-		glGenBuffers(1, &vboID);
-		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-		glBufferData(GL_ARRAY_BUFFER, planeSource->getOutput()->getNumOfPoints() * sizeof(VertexData), planeSource->getOutput()->getData(), GL_STATIC_DRAW);
-
 		// Generate the vao
 		glGenVertexArrays(1, &vaoID);
 		glBindVertexArray(vaoID);
+		// Gen and allocate space for vbo
+		glGenBuffers(1, &vboID);
+		glBindBuffer(GL_ARRAY_BUFFER, vboID);
+		const GLuint numPts = planeSource->getOutput()->getNumOfPoints();
+		glBufferData(GL_ARRAY_BUFFER, numPts * sizeof(GLfloat) * 5, NULL, GL_DYNAMIC_DRAW);
 
-		// Position
-		GLuint shaderID = shaderProgram->getProgramID();
-		GLuint posAttribLocation = glGetAttribLocation(shaderID, "inPos");
-		glEnableVertexAttribArray(posAttribLocation);
-		glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)0);
-		// Texture Coordinates
-		GLuint texAttribLocation = glGetAttribLocation(shaderID, "inTexCoord");
-		glEnableVertexAttribArray(texAttribLocation);
-		glVertexAttribPointer(texAttribLocation, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)(sizeof(glm::vec3) + sizeof(glm::vec3)));
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
+		updateBuffer();
 	}
+	else
+		// VBO size should be constant so no reallocating needed
+		updateBuffer();
 
 	// Setup the texture if it hasn't already been created
+	const GLuint numComps = imageData->getNumComps();
+	GLuint* dim = imageData->getDimensions();
 	if (texID == -1)
 	{
 		glGenTextures(1, &texID);
@@ -100,25 +91,60 @@ void ImageMapper::update()
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, dim[0], dim[1], GL_RGB, GL_UNSIGNED_BYTE, imageData->getData());
 	}
 }
+void ImageMapper::updateBuffer()
+{
+	const GLfloat* vertexData = planeSource->getOutput()->getVertexData();
+	const GLfloat* texCoordData = planeSource->getOutput()->getTexCoordData();
+	const GLuint shaderID = shaderProgram->getProgramID();
+	const GLint numPts = planeSource->getOutput()->getNumOfPoints();
+
+	glBindBuffer(GL_ARRAY_BUFFER, vboID);
+
+	// Load positional data
+	GLint size1 = sizeof(GLfloat) * 3 * numPts;
+	glBufferSubData(GL_ARRAY_BUFFER, 0, size1, vertexData);
+	// Set it's location and access scheme in vao
+	GLuint posAttribLocation = glGetAttribLocation(shaderID, "inPos");
+	glEnableVertexAttribArray(posAttribLocation);
+	glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, (void*)0);
+
+	GLint size2 = sizeof(GLfloat) * 2 * numPts;
+	glBufferSubData(GL_ARRAY_BUFFER, size1, size2, texCoordData);
+	// Set it's location and access scheme in vao
+	GLuint texCoordAttribLocation = glGetAttribLocation(shaderID, "inTexCoord");
+	glEnableVertexAttribArray(texCoordAttribLocation);
+	glVertexAttribPointer(texCoordAttribLocation, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 2, (void*)size1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void ImageMapper::pickShader()
+{
+	// If force shader is on then user of class must set the shader
+	if (forceShader)
+		return;
+
+	// Shader really only depends on the number of components
+	const GLuint numComps = imageData->getNumComps();
+	if (numComps == 1)
+		shaderProgram = Shaders::getShader("Tex1 Shader");
+	else if (numComps == 3)
+		shaderProgram = Shaders::getShader("Tex3 Shader");
+	else
+		shaderProgram = nullptr;
+}
 
 void ImageMapper::draw(Renderer* ren)
 {
 	if (imageData == nullptr || vaoID == -1)
 		return;
 
-	// Save the polygon mode
+	// Save and set the poly mode
 	GLint polyMode;
 	glGetIntegerv(GL_POLYGON_MODE, &polyMode);
-
-	// Set the polygon mode needed
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	// If the currently bound shader is diff bind the new one
-	if (shaderProgram != ren->getCurrentShaderProgram())
-	{
-		ren->setCurrentShaderProgram(shaderProgram);
-		glUseProgram(shaderProgram->getProgramID());
-	}
+	glUseProgram(shaderProgram->getProgramID());
 
 	glm::mat4 mvp = ren->getCamera()->proj * ren->getCamera()->view * model * imageSizeMat;
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram->getProgramID(), "mvp_matrix"), 1, GL_FALSE, &mvp[0][0]);

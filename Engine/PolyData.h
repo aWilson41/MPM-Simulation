@@ -10,98 +10,44 @@ enum CellType
 	QUAD
 };
 
-struct VertexData
-{
-	VertexData()
-	{
-		pos = glm::vec3(0.0f);
-		normal = glm::vec3(0.0f);
-		texCoords = glm::vec2(0.0f);
-	}
-	VertexData(glm::vec3 vertex, glm::vec3 normal, glm::vec2 texCoords)
-	{
-		VertexData::pos = vertex;
-		VertexData::normal = normal;
-		VertexData::texCoords = texCoords;
-	}
-
-	glm::vec3 pos;
-	glm::vec3 normal;
-	glm::vec2 texCoords;
-};
-
-class Cell
-{
-public:
-	VertexData v1;
-};
-class Line : public Cell
-{
-public:
-	VertexData v2;
-};
-class Triangle : public Line
-{
-public:
-	VertexData v3;
-};
-class Quad : public Triangle
-{
-public:
-	VertexData v4;
-};
-
 // Actual container for polygonal data. Can stores points, lines, triangles, and quads
 class PolyData
 {
 public:
-	~PolyData() { delete[] data; }
+	~PolyData()
+	{
+		if (vertexData != nullptr)
+			delete[] vertexData;
+		if (normalData != nullptr)
+			delete[] normalData;
+		if (texCoordData != nullptr)
+			delete[] texCoordData;
+		if (scalarData != nullptr)
+			delete[] scalarData;
+	}
 
 public:
 	UINT getNumOfPoints() { return numPts; }
 	UINT getNumOfCells() { return numCells; }
 	CellType getCellType() { return type; }
 
-	void* getData() { return data; }
-	Cell* getPointData() { return data; }
-	Line* getLineData() { return static_cast<Line*>(data); }
-	Triangle* getTriangleData() { return static_cast<Triangle*>(data); }
-	Quad* getQuadData() { return static_cast<Quad*>(data); }
-	void allocate(UINT cellCount, CellType type)
-	{
-		if (data != nullptr)
-			delete[] data;
-
-		PolyData::type = type;
-		PolyData::numCells = cellCount;
-		if (type == POINT)
-		{
-			data = new Cell[cellCount];
-			memset(data, 0, sizeof(Cell) * cellCount);
-			numPts = cellCount;
-		}
-		else if (type == LINE)
-		{
-			data = new Line[numCells];
-			memset(data, 0, sizeof(Line) * cellCount);
-			numPts = cellCount * 2;
-		}
-		else if (type == TRIANGLE)
-		{
-			data = new Triangle[numCells];
-			memset(data, 0, sizeof(Triangle) * cellCount);
-			numPts = cellCount * 3;
-		}
-		else if (type == QUAD)
-		{
-			data = new Quad[cellCount];
-			memset(data, 0, sizeof(Quad) * cellCount);
-			numPts = cellCount * 4;
-		}
-	}
+	GLfloat* getVertexData() { return vertexData; }
+	GLfloat* getNormalData() { return normalData; }
+	GLfloat* getTexCoordData() { return texCoordData; }
+	GLfloat* getScalarData() { return scalarData; }
+	void allocateVertexData(UINT cellCount, CellType type);
+	void allocateNormalData();
+	void allocateTexCoords();
+	void allocateScalarData(UINT numComps);
 
 protected:
-	Cell* data = nullptr;
+	// Series of optional data arrays
+	// Will probably refactor to be a table of arrays soon, more flexible (VTK does this)
+	GLfloat* vertexData = nullptr; // 3 comp float array
+	GLfloat* normalData = nullptr; // 3 comp float array
+	GLfloat* texCoordData = nullptr; // 2 comp float array
+	GLfloat* scalarData = nullptr; // N comp float array
+
 	UINT numPts = -1;
 	UINT numCells = -1;
 	CellType type = TRIANGLE;

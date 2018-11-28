@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "PolyDataMapper.h"
-#include "Engine/Shaders.h"
+#include "Shaders.h"
+#include "Material.h"
 
 Renderer::Renderer()
 {
@@ -16,6 +17,8 @@ Renderer::~Renderer()
 		delete materials[i];
 	}
 }
+
+void Renderer::addMaterial(Material material) { materials.push_back(new Material(material)); }
 
 void Renderer::render()
 {

@@ -18,7 +18,7 @@ public:
 
 	// Might split mapper into actor where this becomes addActor
 	void addRenderItem(AbstractMapper* mapper) { mappers.push_back(mapper); }
-	void addMaterial(Material* material) { materials.push_back(material); }
+	void addMaterial(Material material);
 
 	Material* getMaterial(UINT i) { return materials[i]; }
 	AbstractMapper* getRenderItem(UINT i) { return mappers[i]; }

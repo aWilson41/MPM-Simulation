@@ -32,6 +32,7 @@ glm::mat2 Particle::calcCauchyStress()
 	// Ratios of volumetric change
 	GLfloat Jp = glm::determinant(defGp);
 	GLfloat Je = glm::determinant(defGe);
+	GLfloat J = glm::determinant(defG);
 
 	// Plastic deformation contributes exponentially to hardening term
 	GLfloat hardening = std::exp(HARDENING * (1.0f - Jp));	
@@ -41,5 +42,6 @@ glm::mat2 Particle::calcCauchyStress()
 	// Shearing term on left (achieved through polar decomposition to remove rigid rotational from elastic deformation), compressional/bulk on the right
 	glm::mat2 defGe_r;
 	MathHelp::pd(defGe, &defGe_r);
-	return 2.0f * mu * (defGe - defGe_r) * glm::transpose(defGe) + glm::mat2(lambda * (Je - 1.0f) * Je);
+	//return 2.0f * mu * (defGe - defGe_r) * glm::transpose(defGe) + glm::mat2(lambda * (Je - 1.0f) * Je); Others don't divide by J?
+	return 2.0f * mu / J * (defGe - defGe_r) * glm::transpose(defGe) + glm::mat2(lambda * (Je - 1.0f) * Je / J); // Tech report says this
 }

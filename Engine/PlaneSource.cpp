@@ -16,23 +16,28 @@ void PlaneSource::update()
 		return;
 
 	// Allocate room for two triangles (6 vertices)
-	outputData->allocate(2, TRIANGLE);
-	VertexData* vertexData = static_cast<VertexData*>(outputData->getData());
+	outputData->allocateVertexData(2, TRIANGLE);
+	GLfloat* vData = outputData->getVertexData();
+	glm::vec3* vertexData = reinterpret_cast<glm::vec3*>(outputData->getVertexData());
 	// Defines a 1x1x1 plane
-	vertexData[0].pos = origin;
-	vertexData[1].pos = p2;
-	vertexData[2].pos = p1;
+	vertexData[0] = origin;
+	vertexData[1] = p2;
+	vertexData[2] = p1;
 
-	vertexData[3].pos = p2;
-	vertexData[4].pos = p1 + p2 - origin;
-	vertexData[5].pos = p1;
+	vertexData[3] = p2;
+	vertexData[4] = p1 + p2 - origin;
+	vertexData[5] = p1;
 
-	vertexData[0].normal = vertexData[1].normal =
-		vertexData[2].normal = vertexData[3].normal =
-		vertexData[4].normal = vertexData[5].normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	outputData->allocateNormalData();
+	glm::vec3* normalData = reinterpret_cast<glm::vec3*>(outputData->getNormalData());
+	normalData[0] = normalData[1] =
+		normalData[2] = normalData[3] =
+		normalData[4] = normalData[5] = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	vertexData[0].texCoords = glm::vec2(0.0f, 0.0f);
-	vertexData[1].texCoords = vertexData[3].texCoords = glm::vec2(0.0f, 1.0f);
-	vertexData[2].texCoords = vertexData[5].texCoords = glm::vec2(1.0f, 0.0f);
-	vertexData[4].texCoords = glm::vec2(1.0f, 1.0f);
+	outputData->allocateTexCoords();
+	glm::vec2* texCoordData = reinterpret_cast<glm::vec2*>(outputData->getTexCoordData());
+	texCoordData[0] = glm::vec2(0.0f, 0.0f);
+	texCoordData[1] = texCoordData[3] = glm::vec2(0.0f, 1.0f);
+	texCoordData[2] = texCoordData[5] = glm::vec2(1.0f, 0.0f);
+	texCoordData[4] = glm::vec2(1.0f, 1.0f);
 }

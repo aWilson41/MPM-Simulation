@@ -10,20 +10,23 @@
 #include "Engine/PolyDataMapper.h"
 #include "Engine/Renderer.h"
 #include "Engine/RenderWindow.h"
+#include "Engine/TrackballCamera.h"
 #include "Engine/TrackballCameraInteractor.h"
 #include "MPMGrid.h"
 #include "Particle.h"
 #include <chrono>
 
+//#define OUTPUTFRAMES
+
 void printIterationStats(MPMGrid* mpmGrid);
-// Updates image with mass values from grid
-void updateMassImage(MPMGrid* mpmGrid, ImageMapper* mapper);
-// Updates particles with color attributes
-void updateParticleColors(Particle* particles, PolyDataMapper* mapper);
+// Updates image with mass values from mpm grid
+void updateGridImage(MPMGrid* mpmGrid, ImageMapper* mapper);
+// Updates particle poly data with scalar values from particles
+void updateParticlePoly(MPMGrid* mpmGrid, PolyDataMapper* mapper);
 
 int main(int argc, char *argv[])
 {
-	// Create the window and give it the renderer
+	// Create the window
 	// This has to happen before any gl calls in other objects because 
 	// glfw can only make the opengl context when creating the window.
 	RenderWindow renWindow;
@@ -36,11 +39,12 @@ int main(int argc, char *argv[])
 	// Create the renderer
 	Renderer ren;
 	ren.setCamera(&cam);
-	ren.addMaterial(new Material(glm::vec3(0.2f, 0.4f, 0.2f), 0.5f));
-	ren.addMaterial(new Material(glm::vec3(0.8f, 0.2f, 0.2f), 1.0f));
+	ren.addMaterial(Material(glm::vec3(0.2f, 0.4f, 0.2f), 0.5f));
+	ren.addMaterial(Material(glm::vec3(0.8f, 0.2f, 0.2f), 1.0f));
+	ren.addMaterial(Material(glm::vec3(0.1f, 0.1f, 0.8f), 1.0f));
 	renWindow.setRenderer(&ren);
 
-	// Setup the camera and camera interactor
+	// Setup the camera interactor (maps user window input to camera)
 	TrackballCameraInteractor iren;
 	iren.setCamera(&cam);
 	renWindow.setInteractor(&iren);
@@ -58,8 +62,8 @@ int main(int argc, char *argv[])
 
 #pragma region Generate Particles and Grid
 	// Generate a 2d poly from a circle
-	geom2d::Poly circlePoly;
-	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 0.25f), 25);
+	geom2d::Poly circlePoly; // 1x1m
+	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 0.2f), 25);
 	GLfloat circlePolyArea = circlePoly.area();
 	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
 	UINT particleCount = static_cast<UINT>(circlePolyArea / particleArea);
@@ -71,14 +75,16 @@ int main(int argc, char *argv[])
 
 	// Setup some polyData to render as a point cloud and setup a collection of particles referencing the positions
 	PolyData ptCloudPolyData;
-	ptCloudPolyData.allocate(particleCount, CellType::POINT);
-	Cell* data = ptCloudPolyData.getPointData();
+	ptCloudPolyData.allocateVertexData(particleCount, CellType::POINT);
+	ptCloudPolyData.allocateScalarData(3);
+	glm::vec3* posData = reinterpret_cast<glm::vec3*>(ptCloudPolyData.getVertexData());
+	glm::vec3* colorData = reinterpret_cast<glm::vec3*>(ptCloudPolyData.getScalarData());
 	Particle* particles = new Particle[particleCount];
 	for (UINT i = 0; i < results.size(); i++)
 	{
-		data[i].v1.pos = results[i];
+		posData[i] = results[i];
 
-		particles[i].pos = &data[i].v1.pos; // Ref to avoid storing two copies
+		particles[i].pos = &posData[i];
 		particles[i].mass = PARTICLE_MASS;
 		particles[i].bulk = BULK_MODULUS;
 		particles[i].shear = SHEAR_MODULUS;
@@ -88,6 +94,7 @@ int main(int argc, char *argv[])
 	PolyDataMapper ptCloudMapper;
 	ptCloudMapper.setInput(&ptCloudPolyData);
 	ptCloudMapper.setMaterial(ren.getMaterial(1));
+	ptCloudMapper.setPolyRepresentation(CellType::POINT);
 	ptCloudMapper.update();
 	ren.addRenderItem(&ptCloudMapper);
 
@@ -109,11 +116,27 @@ int main(int argc, char *argv[])
 		MathHelp::matrixTranslate(bounds.pos.x, bounds.pos.y, 0.0f) * 
 		MathHelp::matrixScale(padSize.x, padSize.y, 1.0f) *
 		MathHelp::matrixRotateX(-HALFPI));
-	boundsMapper.setPolyRepresentation(PolyRep::LINEREP);
+	boundsMapper.setPolyRepresentation(CellType::LINE);
 	boundsMapper.setInput(boundsPlane.getOutput());
 	boundsMapper.setMaterial(ren.getMaterial(1));
 	boundsMapper.update();
 	ren.addRenderItem(&boundsMapper);*/
+
+	PolyData dirPoly;
+	PolyDataMapper dirPolyMapper;
+	dirPolyMapper.setPolyRepresentation(LINE);
+	dirPolyMapper.setMaterial(ren.getMaterial(2));
+	dirPolyMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, 0.0f, -0.05f));
+	dirPolyMapper.setInput(&dirPoly);
+	dirPoly.allocateVertexData(mpmGrid.gridWidth * mpmGrid.gridHeight, CellType::TRIANGLE);
+	glm::vec3* dirPolyPosData = reinterpret_cast<glm::vec3*>(dirPoly.getVertexData());
+	for (int i = 0; i < mpmGrid.gridWidth * mpmGrid.gridHeight; i++)
+	{
+		dirPolyPosData[i * 3] = glm::vec3(mpmGrid.nodes[i].pos, 0.0f);
+		dirPolyPosData[i * 3 + 1] = dirPolyPosData[i * 3] + glm::vec3(mpmGrid.nodes[i].force, 0.0f) * 0.000001f;
+		dirPolyPosData[i * 3 + 2] = dirPolyPosData[i * 3 + 1];
+	}
+	ren.addRenderItem(&dirPolyMapper);
 
 	// Setup a background image for visualizing the node values
 	ImageMapper imageMapper;
@@ -123,27 +146,35 @@ int main(int argc, char *argv[])
 
 	// Update loop
 	UINT iter = 0;
-	const UINT subSteps = 1;
+	const UINT subSteps = 20;
 	while (renWindow.isActive())
 	{
-		auto start = std::chrono::steady_clock::now();
+		//auto start = std::chrono::steady_clock::now();
 		for (UINT i = 0; i < subSteps; i++)
 		{
 			mpmGrid.projectToGrid();
 			mpmGrid.update(TIMESTEP);
-			
 		}
-		auto end = std::chrono::steady_clock::now();
-		printf("Sim Time: %fs\n", std::chrono::duration<double, std::milli>(end - start).count() / 1000.0);
+		//auto end = std::chrono::steady_clock::now();
+		//printf("Sim Time: %fs\n", std::chrono::duration<double, std::milli>(end - start).count() / 1000.0);
 
-		iter++;
-		printf("ITERATION: %d\n", iter * subSteps);
-		printf("Frame: %d\n", iter);
+		//iter++;
+		//printf("ITERATION: %d\n", iter * subSteps);
+		//printf("Frame: %d\n", iter);
 
-		printIterationStats(&mpmGrid);
+		glm::vec3* dirPolyPosData = reinterpret_cast<glm::vec3*>(dirPoly.getVertexData());
+		for (int i = 0; i < mpmGrid.gridWidth * mpmGrid.gridHeight; i++)
+		{
+			dirPolyPosData[i * 3] = glm::vec3(mpmGrid.nodes[i].pos, 0.0f);
+			dirPolyPosData[i * 3 + 1] = dirPolyPosData[i * 3] + glm::vec3(mpmGrid.nodes[i].force, 0.0f) * 0.000001f;
+			dirPolyPosData[i * 3 + 2] = dirPolyPosData[i * 3 + 1];
+		}
+		dirPolyMapper.update();
 
-		ptCloudMapper.update(); // Update buffers
-		updateMassImage(&mpmGrid, &imageMapper);
+
+		//printIterationStats(&mpmGrid);
+		updateGridImage(&mpmGrid, &imageMapper);
+		updateParticlePoly(&mpmGrid, &ptCloudMapper);
 		renWindow.render();
 
 		//auto end = std::chrono::steady_clock::now();
@@ -151,8 +182,9 @@ int main(int argc, char *argv[])
 		//printf("Frame Time: %fs\n", frameTime);
 		//printf("FPS: %f\n", 1.0 / frameTime);
 
+#ifdef OUTPUTFRAMES
 		// Grab and write the frame
-		/*GLint vp[4];
+		GLint vp[4];
 		glGetIntegerv(GL_VIEWPORT, vp);
 		ImageData image;
 		UINT dim[3] = { vp[2], vp[3], 1 };
@@ -164,7 +196,8 @@ int main(int argc, char *argv[])
 		PNGWriter writer;
 		writer.setFileName("output/frame_" + std::to_string(iter) + ".png");
 		writer.setInput(&image);
-		writer.update();*/
+		writer.update();
+#endif
 	}
 
 	delete[] particles;
@@ -174,14 +207,16 @@ int main(int argc, char *argv[])
 
 void printIterationStats(MPMGrid* mpmGrid)
 {
-	printf("Max Particle Deformation Gradient Det: %.*f\n", 10, mpmGrid->maxParticleDefDet);
-	printf("Max Particle Deformation Gradient: \n");
-	MathHelp::printMat(mpmGrid->maxParticleDef);
+	printf("Max Particle defGe Det: %.*f\n", 10, mpmGrid->maxParticleDefDete);
+	printf("Max Particle defGe: \n");
+	MathHelp::printMat(mpmGrid->maxParticleDefe);
+	printf("Max Particle defGp Det: %.*f\n", 10, mpmGrid->maxParticleDefDetp);
+	printf("Max Particle defGp: \n");
+	MathHelp::printMat(mpmGrid->maxParticleDefp);
+
 	printf("Max Particle Velocity Gradient Det:    %.*f\n", 10, mpmGrid->maxParticleVGDet);
 	printf("Max Particle Velocity Gradient: \n");
 	MathHelp::printMat(mpmGrid->maxParticleVG);
-
-	printf("Max Deformation Det:                   %.*f\n", 10, mpmGrid->maxParticleDefDet);
 	printf("Max Particle Velocity:                 %.*f\n", 10, mpmGrid->maxParticleVelocityMag);
 	MathHelp::printVec(mpmGrid->maxParticleVelocity);
 
@@ -190,7 +225,8 @@ void printIterationStats(MPMGrid* mpmGrid)
 	MathHelp::printVec(mpmGrid->maxNodeForce);
 }
 
-void updateMassImage(MPMGrid* mpmGrid, ImageMapper* mapper)
+// Puts the mass values from the mpmgrid into an image
+void updateGridImage(MPMGrid* mpmGrid, ImageMapper* mapper)
 {
 	// Extract the mass into an image
 	ImageData* imageData = new ImageData();
@@ -218,7 +254,23 @@ void updateMassImage(MPMGrid* mpmGrid, ImageMapper* mapper)
 	mapper->update();
 }
 
-void updateParticleColors(Particle* particles, PolyDataMapper* mapper)
+// Puts the defGp values into color values for the poly
+void updateParticlePoly(MPMGrid* mpmGrid, PolyDataMapper* mapper)
 {
 	PolyData* polyData = mapper->getInput();
+	glm::vec3* colors = reinterpret_cast<glm::vec3*>(polyData->getScalarData());
+	GLfloat max = 0.0f;
+	for (UINT i = 0; i < polyData->getNumOfPoints(); i++)
+	{
+		colors[i].x = glm::determinant(mpmGrid->particles[i].defGp);
+		if (colors[i].x > max)
+			max = colors[i].x;
+		colors[i].y = 0.0f;
+		colors[i].z = 0.0f;
+	}
+	for (UINT i = 0; i < polyData->getNumOfPoints(); i++)
+	{
+		colors[i].x *= 1.0f / max;
+	}
+	mapper->update();
 }

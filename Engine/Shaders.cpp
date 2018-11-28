@@ -1,4 +1,12 @@
 #include "Shaders.h"
+#include <string>
+
+#define LoadShader(shaderName, vsPath, fsPath) \
+	{ ShaderProgram* shader = new ShaderProgram(shaderName); \
+		shader->loadVertexShader(vsPath); \
+		shader->loadFragmentShader(fsPath); \
+		shader->compileProgram(); \
+		shaders.push_back(shader); }
 
 namespace Shaders
 {
@@ -17,58 +25,13 @@ namespace Shaders
 	// Initialize some basic shaders
 	void initShaders()
 	{
-		ShaderProgram* shader1 = new ShaderProgram("Norm Shader");
-		shader1->loadVertexShader("Shaders/vertexShader.glsl");
-		shader1->loadFragmentShader("Shaders/fragShader.glsl");
-		shader1->compileProgram();
-		shaders.push_back(shader1);
-
-		ShaderProgram* shader2 = new ShaderProgram("Image Shader");
-		shader2->loadVertexShader("Shaders/imageVertexShader.glsl");
-		shader2->loadFragmentShader("Shaders/imageFragShader.glsl");
-		shader2->compileProgram();
-		shaders.push_back(shader2);
-
-		ShaderProgram* shader3 = new ShaderProgram("GrayImage Shader");
-		shader3->loadVertexShader("Shaders/imageVertexShader.glsl");
-		shader3->loadFragmentShader("Shaders/grayscaleImageFragShader.glsl");
-		shader3->compileProgram();
-		shaders.push_back(shader3);
-
-		//bool success = true;
-		//shaders["NormShader"] = new QOpenGLShaderProgram();
-		//// Compile vertex shader
-		//if (!shaders["NormShader"]->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/Engine/Shaders/vertexShader.glsl"))
-		//	success = false;
-		//// Compile fragment shader
-		//if (!shaders["NormShader"]->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/Engine/Shaders/fragShader.glsl"))
-		//	success = false;
-		//// Link shader pipeline
-		//if (!shaders["NormShader"]->link())
-		//	success = false;
-		//// Bind shader pipeline for use
-		//if (!shaders["NormShader"]->bind())
-		//	success = false;
-
-		//shaders["PtShader"] = new QOpenGLShaderProgram();
-		//if (!shaders["PtShader"]->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/Engine/Shaders/ptVertexShader.glsl"))
-		//	success = false;
-		//if (!shaders["PtShader"]->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/Engine/Shaders/ptFragShader.glsl"))
-		//	success = false;
-		//if (!shaders["PtShader"]->link())
-		//	success = false;
-		//if (!shaders["PtShader"]->bind())
-		//	success = false;
-
-		//shaders["imageShader"] = new QOpenGLShaderProgram();
-		//if (!shaders["imageShader"]->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/Engine/Shaders/imageVertexShader.glsl"))
-		//	success = false;
-		//if (!shaders["imageShader"]->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/Engine/Shaders/imageFragShader.glsl"))
-		//	success = false;
-		//if (!shaders["imageShader"]->link())
-		//	success = false;
-		//if (!shaders["imageShader"]->bind())
-		//	success = false;
+		LoadShader("Point Shader", "Shaders/pointVS.glsl", "Shaders/pointFS.glsl");
+		LoadShader("Color Shader", "Shaders/colorVS.glsl", "Shaders/colorFS.glsl");
+		LoadShader("Tex3 Shader", "Shaders/texVS.glsl", "Shaders/tex3FS.glsl");
+		LoadShader("Tex1 Shader", "Shaders/texVS.glsl", "Shaders/tex1FS.glsl");
+		LoadShader("Normal Shader", "Shaders/normalVS.glsl", "Shaders/normalFS.glsl");
+		LoadShader("NormalColor Shader", "Shaders/normalColorVS.glsl", "Shaders/normalColorFS.glsl");
+		LoadShader("NormalTex3 Shader", "Shaders/normalTexVS.glsl", "Shaders/normalTex3FS.glsl");
 	}
 
 	void deleteShaders()

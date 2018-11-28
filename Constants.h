@@ -4,16 +4,16 @@
 static const GLfloat TIMESTEP = 0.001f;
 static const GLfloat FLIP_PERCENT = 0.95f; // Percent to mix pic and flip velocities on the particles
 
-static const GLfloat POSSIONS_RATIO = 0.2f;// 0.48f;
+static const GLfloat POSSIONS_RATIO = 0.2f; // 0.48f;
 static const GLfloat YOUNGS_MODULUS = 1.4e5f; // Pa, J/m^2, N/m (in 3d it's really J/m^3)
 static const GLfloat BULK_MODULUS = YOUNGS_MODULUS * POSSIONS_RATIO / ((1.0f + POSSIONS_RATIO) * (1.0f - 2.0f * POSSIONS_RATIO)); // lambda
 static const GLfloat SHEAR_MODULUS = YOUNGS_MODULUS / (2.0f * (1.0f + POSSIONS_RATIO)); // mu
 
-static const GLfloat PARTICLE_MASS = 100.0f;// 95.28f; // 930 kg / m^3 -> 95.28 kg / m^2
-static const GLfloat PARTICLE_DIAMETER = 0.04f; // Meters, This controls particle count
+static const GLfloat PARTICLE_MASS = 100.0f; // kg / m^2
+static const GLfloat PARTICLE_DIAMETER = 0.02f; // Meters, This controls particle count
 
 // Increase energy given by plastic deformation
-static const GLfloat HARDENING = 10.0f;
+static const GLfloat HARDENING = 5.0f;
 
 // Exceeding the following threshold will cause plastic deformation
 static const GLfloat CRIT_STRETCH = 1.0f + 7.5e-3f;
