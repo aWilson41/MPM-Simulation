@@ -1,7 +1,6 @@
 #include "MPMGrid.h"
 #include "Constants.h"
 #include "Particle.h"
-#include <iostream>
 
 // If this is on we will collect max values to track instabilities
 //#define STATS
@@ -29,6 +28,12 @@ static GLfloat dNX(const GLfloat x)
 
 static GLfloat weight(const glm::vec2 pos) { return NX(pos.x) * NX(pos.y); }
 glm::vec2 MPMGrid::gradWeight(const glm::vec2 pos) { return glm::vec2(dNX(pos.x) * NX(pos.y), dNX(pos.y) * NX(pos.x)) * invCellSize; }
+
+MPMGrid::~MPMGrid()
+{
+	if (nodes != nullptr)
+		delete[] nodes;
+}
 
 void MPMGrid::initGrid(glm::vec2 origin, glm::vec2 size, int width, int height)
 {
@@ -341,10 +346,6 @@ void MPMGrid::update(GLfloat dt)
 
 		// Update the particle position using the velocity
 		particles[i].updatePos(dt);
-		/*if (particles[i].pos->x < bounds[0] || particles[i].pos->x > bounds[1] || particles[i].pos->y < bounds[2] || particles[i].pos->y > bounds[3])
-			printf("Particle outside bounds.\n");
-		if (!particles[i].inBounds)
-			printf("Particle outside buffer.\n");*/
 		// Update the deformation gradient using the velocity gradient (which was calculated from the velocity)
 		particles[i].updateGradient(dt);
 
@@ -363,11 +364,4 @@ void MPMGrid::update(GLfloat dt)
 		}
 #endif
 	}
-}
-
-
-MPMGrid::~MPMGrid()
-{
-	if (nodes != nullptr)
-		delete[] nodes;
 }

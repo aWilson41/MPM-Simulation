@@ -1,4 +1,5 @@
 #include "Particle.h"
+#include "Constants.h"
 
 void Particle::updatePos(GLfloat dt)
 {

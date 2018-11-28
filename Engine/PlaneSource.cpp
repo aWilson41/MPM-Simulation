@@ -1,10 +1,7 @@
 #include "PlaneSource.h"
 #include "PolyData.h"
 
-PlaneSource::PlaneSource()
-{
-	outputData = new PolyData();
-}
+PlaneSource::PlaneSource() { outputData = new PolyData(); }
 PlaneSource::~PlaneSource()
 {
 	if (outputData != nullptr)

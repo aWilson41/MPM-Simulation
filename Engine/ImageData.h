@@ -16,7 +16,7 @@ public:
 	void* getData() { return data; }
 	UINT getNumComps() { return numComps; }
 	ScalarType getScalarType() { return type; }
-	
+
 	// Updates bounds given dimensions, spacing, & origin
 	void updateBounds();
 

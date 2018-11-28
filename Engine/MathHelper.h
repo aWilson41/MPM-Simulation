@@ -43,11 +43,11 @@ public:
 	static glm::vec2 projAToB(glm::vec2 a, glm::vec2 b);
 	static glm::vec3 projAToB(glm::vec3 a, glm::vec3 b);
 
-    // Triangles
+	// Triangles
 	static GLfloat triangleAreaSigned(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
 	static GLfloat triangleArea(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
 
-    // Computes bary centric coordinates of point p in triangle a,b,c
+	// Computes bary centric coordinates of point p in triangle a,b,c
 	static glm::vec3 baryCentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
 	static glm::vec3 baryCentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c);
 

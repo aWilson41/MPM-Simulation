@@ -1,5 +1,4 @@
 #pragma once
-#include "Constants.h"
 #include "Engine/MathHelper.h"
 
 class Particle

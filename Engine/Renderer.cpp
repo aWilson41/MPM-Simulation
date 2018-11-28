@@ -3,10 +3,7 @@
 #include "Shaders.h"
 #include "Material.h"
 
-Renderer::Renderer()
-{
-	Shaders::initShaders();
-}
+Renderer::Renderer() { Shaders::initShaders(); }
 
 Renderer::~Renderer()
 {

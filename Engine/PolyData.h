@@ -1,14 +1,7 @@
 #pragma once
 #include "MathHelper.h"
+#include "Types.h"
 #include <vector>
-
-enum CellType
-{
-	POINT,
-	LINE,
-	TRIANGLE,
-	QUAD
-};
 
 // Actual container for polygonal data. Can stores points, lines, triangles, and quads
 class PolyData

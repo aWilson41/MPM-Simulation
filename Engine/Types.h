@@ -8,6 +8,14 @@ enum ScalarType
 	DOUBLE_T = 3
 };
 
+enum CellType
+{
+	POINT,
+	LINE,
+	TRIANGLE,
+	QUAD
+};
+
 // Typedef the call with the type
 #define TemplateMacroCase(typeN, type, call) \
 	case typeN: { typedef type TT; call; }; break

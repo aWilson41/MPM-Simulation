@@ -1,9 +1,9 @@
 #include "ImageMapper.h"
 #include "Camera.h"
-#include "PolyData.h"
-#include "PlaneSource.h"
-#include "Renderer.h"
 #include "ImageData.h"
+#include "PlaneSource.h"
+#include "PolyData.h"
+#include "Renderer.h"
 #include "Shaders.h"
 
 ImageMapper::ImageMapper()
@@ -16,6 +16,13 @@ ImageMapper::~ImageMapper()
 {
 	if (planeSource != nullptr)
 		delete planeSource;
+}
+
+void ImageMapper::setInput(ImageData* data)
+{
+	if (imageData != nullptr)
+		delete imageData;
+	imageData = data;
 }
 
 void ImageMapper::update()
@@ -148,7 +155,7 @@ void ImageMapper::draw(Renderer* ren)
 
 	glm::mat4 mvp = ren->getCamera()->proj * ren->getCamera()->view * model * imageSizeMat;
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram->getProgramID(), "mvp_matrix"), 1, GL_FALSE, &mvp[0][0]);
-	
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texID);
 

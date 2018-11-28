@@ -10,6 +10,4 @@ I might replace eigen with something more lightweight soon as I'm only using its
 
 Build with CMake using the provided CMakeLists.txt.
 
-This includes my own graphics abstraction (I might give it it's own repo soon).
-
-Things to note: It uses explicit integration which means the timestep has to be very small. The paper suggests 0.00001. It also kinda of depends on other parameters. IE: Particle count and size mainly.
+This includes my own graphics abstraction (I might give it it's own repo soon) includes LodePNG for reading/writing png images.

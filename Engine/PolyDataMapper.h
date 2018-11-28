@@ -1,7 +1,7 @@
 #pragma once
 #include "AbstractMapper.h"
 #include "MathHelper.h"
-#include "PolyData.h"
+#include "Types.h"
 
 class Material;
 class PolyData;
@@ -22,12 +22,7 @@ public:
 	CellType getPolyRepresentation() { return representation; }
 	GLfloat getPointSize() { return pointSize; }
 
-	void setInput(PolyData* input)
-	{
-		if (polyData != nullptr)
-			delete polyData;
-		polyData = input;
-	}
+	void setInput(PolyData* input);
 	void setShaderProgram(ShaderProgram* shaderProgram)
 	{
 		PolyDataMapper::shaderProgram = shaderProgram;

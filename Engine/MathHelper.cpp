@@ -1,8 +1,7 @@
 #include "MathHelper.h"
 #include "Geometry2D.h"
-#include <random>
 #include <Eigen/SVD>
-#include <Eigen/Core>
+#include <random>
 #include <time.h>
 
 glm::mat4 MathHelp::matrixRotateX(GLfloat radians)

@@ -14,6 +14,13 @@ PolyDataMapper::~PolyDataMapper()
 		glDeleteBuffers(1, &vboID);
 }
 
+void PolyDataMapper::setInput(PolyData* input)
+{
+	if (polyData != nullptr)
+		delete polyData;
+	polyData = input;
+}
+
 void PolyDataMapper::update()
 {
 	const GLfloat* vertexData = polyData->getVertexData();

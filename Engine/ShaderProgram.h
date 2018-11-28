@@ -6,10 +6,7 @@
 class ShaderProgram
 {
 public:
-	ShaderProgram(std::string name)
-	{
-		shaderName = name;
-	}
+	ShaderProgram(std::string name) { shaderName = name; }
 
 public:
 	std::string getName() { return shaderName; }
@@ -91,7 +88,7 @@ public:
 		printf(data);
 		printf("\n");
 		delete[] data;
-		
+
 	}
 	void printLinkerError(GLuint programID)
 	{

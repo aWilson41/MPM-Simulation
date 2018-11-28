@@ -8,7 +8,7 @@ class TrackballCamera : public Camera
 public:
 	TrackballCamera() { reset(); }
 
-	void initTrackballCamera(GLfloat phi, GLfloat theta, GLfloat rho, 
+	void initTrackballCamera(GLfloat phi, GLfloat theta, GLfloat rho,
 		GLfloat fov, GLfloat aspectRatio, GLfloat nearZ, GLfloat farZ)
 	{
 		TrackballCamera::phi = phi;
@@ -33,7 +33,7 @@ public:
 	// Resets to defaults
 	void reset() override
 	{
-		initTrackballCamera(1.4f, 1.57f, 35.0f, 
+		initTrackballCamera(1.4f, 1.57f, 35.0f,
 			45.0f, 16.0f / 9.0f, 0.0001f, 100000.0f);
 	}
 

@@ -48,15 +48,9 @@ public:
 	}
 
 	// Gives a delta scroll value
-	virtual void mouseScroll(GLfloat ds)
-	{
+	virtual void mouseScroll(GLfloat ds) { }
 
-	}
-
-	virtual void windowResize(int width, int height)
-	{
-
-	}
+	virtual void windowResize(int width, int height) { }
 
 protected:
 	glm::vec2 prevMousePos;
