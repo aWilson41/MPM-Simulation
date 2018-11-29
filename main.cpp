@@ -4,6 +4,7 @@
 #include "Engine/ImageMapper.h"
 #include "Engine/Material.h"
 #include "Engine/PlaneSource.h"
+#include "Engine/PNGWriter.h"
 #include "Engine/PolyData.h"
 #include "Engine/PolyDataMapper.h"
 #include "Engine/Renderer.h"
@@ -12,9 +13,6 @@
 #include "Engine/TrackballCameraInteractor.h"
 #include "MPMGrid.h"
 #include "Particle.h"
-
-//#define OUTPUTFRAMES
-//#define STATS
 
 void printIterationStats(MPMGrid* mpmGrid);
 // Updates image with mass values from mpm grid
@@ -59,7 +57,7 @@ int main(int argc, char *argv[])
 
 	// Generate a 2d poly from a circle
 	geom2d::Poly circlePoly;
-	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 0.2f), 25); // radius in meters
+	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 0.5f), 25); // radius in meters
 
 	// Fill the circle with randomely distributed positions
 	GLfloat circlePolyArea = circlePoly.area();
@@ -101,7 +99,7 @@ int main(int argc, char *argv[])
 	GLfloat padScale = 2.0f;
 	glm::vec2 padSize = bounds.size() * padScale;
 	glm::vec2 origin = bounds.pos - padSize * 0.5f;
-	mpmGrid.initGrid(origin, padSize, 8, 8);
+	mpmGrid.initGrid(origin, padSize, 32, 32);
 	mpmGrid.initParticles(particles, particleCount);
 
 	// Setup a background image for visualizing the node values
@@ -110,16 +108,18 @@ int main(int argc, char *argv[])
 	ren.addRenderItem(&imageMapper);
 
 	// Update loop
-	const UINT subSteps = 20;
+	UINT frameCount = 0;
 	while (renWindow.isActive())
 	{
+		printf("Frame: %d\n", frameCount);
 #ifdef STATS
 		auto start = std::chrono::steady_clock::now();
 #endif
-		// Do the actual simulation (can be useful to take multiple steps per frame, subSteps)
-		for (UINT i = 0; i < subSteps; i++)
+		// Do the actual simulation
+		for (UINT i = 0; i < SUBSTEPS; i++)
 		{
 			mpmGrid.projectToGrid();
+			// Split so user can apply their own forces to the velocities
 			mpmGrid.update(TIMESTEP);
 		}
 #ifdef STATS
@@ -131,23 +131,23 @@ int main(int argc, char *argv[])
 		updateGridImage(&mpmGrid, &imageMapper);
 		updateParticlePoly(&mpmGrid, &ptCloudMapper);
 		renWindow.render();
-
 #ifdef OUTPUTFRAMES
-		// Grab and write the frame
+		// Get the frame
 		GLint vp[4];
 		glGetIntegerv(GL_VIEWPORT, vp);
 		ImageData image;
-		UINT dim[3] = { vp[2], vp[3], 1 };
+		UINT dim[3] = { static_cast<UINT>(vp[2]), static_cast<UINT>(vp[3]), 1 };
 		double spacing[3] = { 1.0, 1.0, 1.0 };
 		double origin[3] = { 0.0, 0.0, 0.0 };
 		image.allocate2DImage(dim, spacing, origin, 3, ScalarType::UCHAR_T);
 		glReadPixels(0, 0, dim[0], dim[1], GL_RGB, GL_UNSIGNED_BYTE, image.getData());
-
+		// Write the frame as png
 		PNGWriter writer;
-		writer.setFileName("output/frame_" + std::to_string(iter) + ".png");
+		writer.setFileName("output/frame_" + std::to_string(frameCount) + ".png");
 		writer.setInput(&image);
 		writer.update();
 #endif
+		frameCount++;
 	}
 
 	delete[] particles;

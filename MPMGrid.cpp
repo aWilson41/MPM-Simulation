@@ -2,9 +2,6 @@
 #include "Constants.h"
 #include "Particle.h"
 
-// If this is on we will collect max values to track instabilities
-//#define STATS
-
 static GLfloat NX(GLfloat x)
 {
 	x = fabs(x);
@@ -342,7 +339,7 @@ void MPMGrid::update(GLfloat dt)
 
 	for (UINT i = 0; i < pointCount; i++)
 	{
-		// Solve velocities per particle (doesn't introduce anything to velocity gradient)
+		// Solve velocities per particle (doesn't introduce anything to velocity gradient until next iteration)
 		collision(particles[i].getPos(), particles[i].velocity, dt);
 
 		// Update the particle position using the velocity
