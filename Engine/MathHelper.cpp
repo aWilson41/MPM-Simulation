@@ -142,7 +142,7 @@ glm::vec3 MathHelp::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::ve
 		(-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t3);
 }
 
-glm::vec2 MathHelp::calculateCentroid(glm::vec2* vertices, UINT count)
+glm::vec2 MathHelp::calcCentroid(glm::vec2* vertices, UINT count)
 {
 	glm::vec2 centroid(0.0f);
 	GLfloat signedArea = 0.0f;
@@ -171,31 +171,9 @@ glm::vec2 MathHelp::calculateCentroid(glm::vec2* vertices, UINT count)
 
 geom2d::Rect MathHelp::get2dBounds(glm::vec2* vertices, UINT count)
 {
-	GLfloat maxX = std::numeric_limits<GLfloat>::min();
-	GLfloat minX = std::numeric_limits<GLfloat>::max();
-	GLfloat maxY = std::numeric_limits<GLfloat>::min();
-	GLfloat minY = std::numeric_limits<GLfloat>::max();
-
-	for (UINT i = 0; i < count; i++)
-	{
-		if (vertices[i].x > maxX)
-			maxX = vertices[i].x;
-		if (vertices[i].x < minX)
-			minX = vertices[i].x;
-		if (vertices[i].y > maxY)
-			maxY = vertices[i].y;
-		if (vertices[i].y < minY)
-			minY = vertices[i].y;
-	}
-	glm::vec2 size = glm::vec2(maxX - minX, maxY - minY);
-	return geom2d::Rect(glm::vec2(minX, minY) + size * 0.5f, size);
-}
-geom2d::Rect MathHelp::get2dBounds(glm::vec3* vertices, UINT count)
-{
-	GLfloat maxX = std::numeric_limits<GLfloat>::min();
-	GLfloat minX = std::numeric_limits<GLfloat>::max();
-	GLfloat maxY = std::numeric_limits<GLfloat>::min();
-	GLfloat minY = std::numeric_limits<GLfloat>::max();
+	GLfloat maxX, maxY, minX, minY;
+	maxX = maxY = std::numeric_limits<GLfloat>::min();
+	minX = minY = std::numeric_limits<GLfloat>::max();
 
 	for (UINT i = 0; i < count; i++)
 	{
@@ -212,14 +190,13 @@ geom2d::Rect MathHelp::get2dBounds(glm::vec3* vertices, UINT count)
 	return geom2d::Rect(glm::vec2(minX, minY) + size * 0.5f, size);
 }
 
-std::vector<glm::vec3> MathHelp::generatePointCloud(geom2d::Poly* poly, UINT ptCount)
+std::vector<glm::vec2> MathHelp::generatePointCloud(geom2d::Poly* poly, UINT ptCount)
 {
 	// Just a rectangle hit or miss strategy. Maybe later I'll triangulate and actually calculate points inside the poly
-	std::vector<glm::vec3> results;
+	std::vector<glm::vec2> results;
+	results.reserve(ptCount);
 	geom2d::Rect aabb = get2dBounds(poly->vertices.data(), static_cast<UINT>(poly->vertices.size()));
-	glm::vec3 pos = glm::vec3(aabb.pos, 0.0f);
-	glm::vec3 extent = glm::vec3(aabb.extent, 0.0f);
-	glm::vec3 size = extent * 2.0f;
+	glm::vec2 size = aabb.extent * 2.0f;
 
 	UINT maxUint = std::numeric_limits<UINT>::max();
 	std::uniform_int_distribution<std::mt19937::result_type> random(0, maxUint);
@@ -227,12 +204,11 @@ std::vector<glm::vec3> MathHelp::generatePointCloud(geom2d::Poly* poly, UINT ptC
 	while (results.size() < ptCount)
 	{
 		// Generate a random point
-		// Generate random in 0, 1000
-		glm::vec3 newPt = glm::vec3(static_cast<GLfloat>(random(rng)), static_cast<GLfloat>(random(rng)), 0.0f);
+		glm::vec2 newPt = glm::vec2(static_cast<GLfloat>(random(rng)), static_cast<GLfloat>(random(rng)));
 		// Change random to [-1, 1]
 		newPt = newPt / (maxUint * 0.5f) - 1.0f;
 		// Change random to [-(width or height) / 2, (width or height) / 2] and add center
-		newPt = newPt * extent + pos;
+		newPt = newPt * aabb.extent + aabb.pos;
 
 		// Check if the point lies in the polygon
 		if (isPointInPolygon(poly, newPt))
@@ -263,9 +239,9 @@ GLfloat MathHelp::polygonArea(geom2d::Poly* poly)
 	UINT count = static_cast<UINT>(vertices.size());
 	for (UINT i = 0; i < count - 1; i++)
 	{
-		area += vertices[i].x * vertices[i + 1].y - vertices[i + 1].x * vertices[i].y;
+		area += cross(vertices[i], vertices[i + 1]);
 	}
-	area += vertices[count - 1].x * vertices[0].y - vertices[0].x * vertices[count - 1].y;
+	area += cross(vertices[count - 1], vertices[0]);
 	return area * 0.5f;
 }
 
@@ -277,14 +253,6 @@ glm::mat2 MathHelp::outer(glm::vec2 a, glm::vec2 b)
 	results[1][0] = a.x * b.y;
 	results[1][1] = a.y * b.y;
 	return results;
-}
-
-void MathHelp::setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11)
-{
-	m[0][0] = m00;
-	m[0][1] = m10;
-	m[1][0] = m01;
-	m[1][1] = m11;
 }
 
 void MathHelp::svd(glm::mat2x2 source, glm::mat2x2* u, glm::vec2* s, glm::mat2x2* v)

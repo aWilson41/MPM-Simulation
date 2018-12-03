@@ -65,14 +65,13 @@ public:
 	static glm::vec3 catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t);
 
 	// Calculates the centroid of a polygon
-	static glm::vec2 calculateCentroid(glm::vec2* vertices, UINT count);
+	static glm::vec2 calcCentroid(glm::vec2* vertices, UINT count);
 
 	// Calculates a bounding rectangle around the point set
 	static geom2d::Rect get2dBounds(glm::vec2* vertices, UINT count);
-	static geom2d::Rect get2dBounds(glm::vec3* vertices, UINT count);
 
 	// Generates a point cloud in a polygon
-	static std::vector<glm::vec3> generatePointCloud(geom2d::Poly* poly, UINT ptCount);
+	static std::vector<glm::vec2> generatePointCloud(geom2d::Poly* poly, UINT ptCount);
 
 	static bool isPointInPolygon(geom2d::Poly* poly, glm::vec2 pt);
 
@@ -115,8 +114,6 @@ public:
 		else
 			return val;
 	}
-
-	static void setData(glm::mat2x2& m, GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11);
 
 	// Singular value decomp source = u * (s * Identity) * v^T
 	static void svd(glm::mat2x2 source, glm::mat2x2* u, glm::vec2* s, glm::mat2x2* v);

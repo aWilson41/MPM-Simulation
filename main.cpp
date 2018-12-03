@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	printf("Polygon Area:   %f\n", circlePolyArea);
 	printf("Particle Area:  %f\n", particleArea);
 	printf("Particle Count: %d\n", particleCount);
-	std::vector<glm::vec3> results = MathHelp::generatePointCloud(&circlePoly, particleCount);
+	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, particleCount);
 
 	// Setup the polydata and particles
 	PolyData ptCloudPolyData;
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	Particle* particles = new Particle[particleCount];
 	for (UINT i = 0; i < results.size(); i++)
 	{
-		posData[i] = results[i];
+		posData[i] = glm::vec3(results[i], 0.0f);
 
 		particles[i].pos = &posData[i];
 		particles[i].mass = PARTICLE_MASS;
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 	ren.addRenderItem(&ptCloudMapper);
 
 	// Setup the MPMGrid for simulation
-	geom2d::Rect bounds = MathHelp::get2dBounds(results.data(), particleCount);
+	geom2d::Rect bounds = MathHelp::get2dBounds(results.data(), results.size());
 	MPMGrid mpmGrid;
 	GLfloat padScale = 2.0f;
 	glm::vec2 padSize = bounds.size() * padScale;
@@ -109,9 +109,11 @@ int main(int argc, char *argv[])
 
 	// Update loop
 	UINT frameCount = 0;
+	float frameTime = 0.0f;
 	while (renWindow.isActive())
 	{
 		printf("Frame: %d\n", frameCount);
+		printf("FrameTime: %f\n", frameTime);
 #ifdef STATS
 		auto start = std::chrono::steady_clock::now();
 #endif
@@ -122,6 +124,7 @@ int main(int argc, char *argv[])
 			// Split so user can apply their own forces to the velocities
 			mpmGrid.update(TIMESTEP);
 		}
+		frameTime += TIMESTEP * SUBSTEPS;
 #ifdef STATS
 		auto end = std::chrono::steady_clock::now();
 		printf("Sim Time: %fs\n", std::chrono::duration<double, std::milli>(end - start).count() / 1000.0);

@@ -5,7 +5,7 @@
 // Planning to figure this out as I continue to simulate.
 
 // Papers recommends 0.00001 for explicit integration.
-static const GLfloat TIMESTEP = 0.0005f;
+static const GLfloat TIMESTEP = 0.001f;
 static const GLfloat FLIP_PERCENT = 0.95f; // Percent to mix pic and flip velocities on the particles
 
 // When outputting frames it's useful to take many simulation steps per frame (substeps)
@@ -38,7 +38,7 @@ static const GLfloat PARTICLE_DIAMETER = 0.03f; // This controls the particle co
 // This becomes important because the energy given by deformation is exponentially increased with plastic deformation
 // This helps particles move more freely when plastically deformed
 // Ie: e^(hardening * (plastic deformation - 1)) is multiplied with both the shear and bulk terms of the energy density equation
-static const GLfloat HARDENING = 15.0f;
+static const GLfloat HARDENING = 10.0f;
 static const GLfloat CRIT_STRETCH = 1.0f + 7.5e-3f;
 static const GLfloat CRIT_COMPRESS = 1.0f - 1.9e-2f;
 
@@ -47,5 +47,5 @@ static const GLfloat FRICTION = 1.0f;
 
 // When this is defined the program will compile to write frames
 //#define OUTPUTFRAMES
-// When this is defined the program will compile to write stats to the console every frame (slow)
+// When this is defined the program will compile to write stats to the console every frame
 //#define STATS
