@@ -170,7 +170,7 @@ void MPMGrid::updateGridVelocities(GLfloat dt)
 		// Only update the node velocity if it is active
 		if (nodes[i].mass != 0.0f)
 		{
-			nodes[i].force += g * nodes[i].mass;
+			nodes[i].force += g * nodes[i].mass * 150.0f;
 			// Update node velocity given force (we don't really need to do the above unless we want a "valid" force)
 			nodes[i].newVelocity = nodes[i].velocity + (nodes[i].force / nodes[i].mass) * dt;
 
@@ -278,7 +278,6 @@ void MPMGrid::collision(glm::vec2 pos, glm::vec2& v, GLfloat dt)
 		{
 			if (pos.y <= bounds[2])
 			{
-				printf("test\n");
 				collision = true;
 				normal = glm::vec2(0.0f, 1.0f);
 			}

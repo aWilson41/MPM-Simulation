@@ -146,7 +146,14 @@ int main(int argc, char *argv[])
 		glReadPixels(0, 0, dim[0], dim[1], GL_RGB, GL_UNSIGNED_BYTE, image.getData());
 		// Write the frame as png
 		PNGWriter writer;
-		writer.setFileName("output/frame_" + std::to_string(frameCount) + ".png");
+		if (frameCount < 10)
+			writer.setFileName("output/frame_000" + std::to_string(frameCount) + ".png");
+		else if (frameCount < 100)
+			writer.setFileName("output/frame_00" + std::to_string(frameCount) + ".png");
+		else if (frameCount < 1000)
+			writer.setFileName("output/frame_0" + std::to_string(frameCount) + ".png");
+		else if (frameCount < 10000)
+			writer.setFileName("output/frame_" + std::to_string(frameCount) + ".png");
 		writer.setInput(&image);
 		writer.update();
 #endif

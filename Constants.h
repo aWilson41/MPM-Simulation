@@ -1,18 +1,16 @@
 #pragma once
 #include "Engine/MathHelper.h"
-// Note: I think the youngs modulus and mass are wrong. They should be modified for 2d. Ie: J/m^2 and kg/m^2
-// As long as the values are relative its ok but requires tuning of the substeps to get the physically correct velocities.
-// Planning to figure this out as I continue to simulate.
 
 // Papers recommends 0.00001 for explicit integration.
-static const GLfloat TIMESTEP = 0.001f;
-static const GLfloat FLIP_PERCENT = 0.95f; // Percent to mix pic and flip velocities on the particles
+// Maximum amount of frames allowed to output, only used if output frames is on
+static const GLuint NUMFRAMES = 1000;
+#define OUTPUTFRAMES
+//#define TIMER
 
-// When outputting frames it's useful to take many simulation steps per frame (substeps)
-// So we calculate the number of substeps from the desired FPS given the timestep
-static const GLuint FPS = 30;
-static const GLuint SUBSTEPS = static_cast<GLuint>((1.0f / TIMESTEP) / FPS); // Number of iterations required for 1s of simulation divi'd up among the number of frames every sec.
-static const GLuint MAXFRAMES = 1000;
+static const GLuint FPS = 60;
+static const GLuint SUBSTEPS = 15;
+static const GLfloat TIMESCALE = 0.5f;
+static const GLfloat TIMESTEP = TIMESCALE / (FPS * SUBSTEPS);
 
 // The possions ratio kinda gives us a ratio of shear to bulk (stretch/compressional) resistance. The youngs modulus is just an overall scale applied.
 // The bulk and shear modulus scale the energy contributed by shear and bulk deformation respectively (see energy density eq.).
@@ -45,7 +43,5 @@ static const GLfloat CRIT_COMPRESS = 1.0f - 1.9e-2f;
 // Still working on collision but this is just a ratio multiplied with the tangential velocity during colllision
 static const GLfloat FRICTION = 1.0f;
 
-// When this is defined the program will compile to write frames
-//#define OUTPUTFRAMES
-// When this is defined the program will compile to write stats to the console every frame
-//#define STATS
+// Percent to mix pic and flip velocities on the particles
+static const GLfloat FLIP_PERCENT = 0.95f;
