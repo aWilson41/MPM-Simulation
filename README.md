@@ -1,5 +1,5 @@
 # MPM-Simulation
-Material Point Method Simulation. See "A Material Point Method For Snow Simulation" for details.
+Material Point Method Simulation. See "A Material Point Method For Snow Simulation" for details. Currently only implements an explicit update so if you want something stable you'll have to use impractically small timesteps.
 
 Paper: https://www.math.ucla.edu/~jteran/papers/SSCTS13.pdf
 
