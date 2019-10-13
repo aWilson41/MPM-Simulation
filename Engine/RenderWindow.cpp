@@ -2,6 +2,7 @@
 #include "MouseInteractor.h"
 #include "Renderer.h"
 #include <GLFW/glfw3.h>
+#include <stdexcept>
 
 RenderWindow::RenderWindow()
 {

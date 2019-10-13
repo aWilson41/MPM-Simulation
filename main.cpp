@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 	// Fill the circle with randomely distributed positions
 	GLfloat circlePolyArea = circlePoly.area();
 	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
+	//GLfloat particleArea = geom2d::Circle(0.0f, 0.0f, PARTICLE_DIAMETER * 0.5f).area();
 	UINT particleCount = static_cast<UINT>(circlePolyArea / particleArea);
 	printf("Polygon Area:   %f\n", circlePolyArea);
 	printf("Particle Area:  %f\n", particleArea);
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
 	GLfloat padScale = 2.0f;
 	glm::vec2 padSize = bounds.size() * padScale;
 	glm::vec2 origin = bounds.pos - padSize * 0.5f;
-	mpmGrid.initGrid(origin, padSize, 32, 32);
+	mpmGrid.initGrid(origin, padSize, 24, 24);
 	mpmGrid.initParticles(particles, particleCount);
 
 	// Setup a background image for visualizing the node values
@@ -112,9 +113,8 @@ int main(int argc, char *argv[])
 	float frameTime = 0.0f;
 	while (renWindow.isActive())
 	{
-		printf("Frame: %d\n", frameCount);
-		printf("FrameTime: %f\n", frameTime);
 #ifdef STATS
+		printf("Frame: %d\n", frameCount);
 		auto start = std::chrono::steady_clock::now();
 #endif
 		// Do the actual simulation
@@ -125,7 +125,9 @@ int main(int argc, char *argv[])
 			mpmGrid.update(TIMESTEP);
 		}
 		frameTime += TIMESTEP * SUBSTEPS;
+		
 #ifdef STATS
+		printf("Post FrameTime: %f\n", frameTime);
 		auto end = std::chrono::steady_clock::now();
 		printf("Sim Time: %fs\n", std::chrono::duration<double, std::milli>(end - start).count() / 1000.0);
 		printIterationStats(&mpmGrid);

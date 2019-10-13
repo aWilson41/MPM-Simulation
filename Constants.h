@@ -4,22 +4,24 @@
 // Papers recommends 0.00001 for explicit integration.
 // Maximum amount of frames allowed to output, only used if output frames is on
 static const GLuint NUMFRAMES = 1000;
-#define OUTPUTFRAMES
+//#define OUTPUTFRAMES
 //#define TIMER
 
+// Ex: 60fps * 10substeps = 600 steps per second, 10 per frame
 static const GLuint FPS = 60;
-static const GLuint SUBSTEPS = 15;
-static const GLfloat TIMESCALE = 0.5f;
+static const GLuint SUBSTEPS = 50;
+static const GLfloat TIMESCALE = 1.0f;
 static const GLfloat TIMESTEP = TIMESCALE / (FPS * SUBSTEPS);
 
-// The possions ratio kinda gives us a ratio of shear to bulk (stretch/compressional) resistance. The youngs modulus is just an overall scale applied.
+// The possions ratio gives us a ratio of shear to bulk (stretch/compressional) resistance.
+// The youngs modulus is an overall scale applied. Intinsic to the material being simulated.
 // The bulk and shear modulus scale the energy contributed by shear and bulk deformation respectively (see energy density eq.).
 // High shear: Particles can easily slide past each other.
 // Low bulk: Particles can easily compress/stretch
 // Conversly
 // Low shear: Particles can't easily slide past each other (very rigid)
 // High bulk: Particles can't eaisly compress/stretch (again very rigid)
-static const GLfloat POSSIONS_RATIO = 0.45f;
+static const GLfloat POSSIONS_RATIO = 0.4f;
 static const GLfloat YOUNGS_MODULUS = 1.4e5f; // Pa = J/m^3.
 static const GLfloat BULK_MODULUS = YOUNGS_MODULUS * POSSIONS_RATIO / ((1.0f + POSSIONS_RATIO) * (1.0f - 2.0f * POSSIONS_RATIO)); // lambda
 static const GLfloat SHEAR_MODULUS = YOUNGS_MODULUS / (2.0f * (1.0f + POSSIONS_RATIO)); // mu
@@ -41,7 +43,7 @@ static const GLfloat CRIT_STRETCH = 1.0f + 7.5e-3f;
 static const GLfloat CRIT_COMPRESS = 1.0f - 1.9e-2f;
 
 // Still working on collision but this is just a ratio multiplied with the tangential velocity during colllision
-static const GLfloat FRICTION = 1.0f;
+static const GLfloat FRICTION = 0.9f;
 
 // Percent to mix pic and flip velocities on the particles
 static const GLfloat FLIP_PERCENT = 0.95f;
