@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	GLfloat padScale = 2.0f;
 	glm::vec2 padSize = bounds.size() * padScale;
 	glm::vec2 origin = bounds.pos - padSize * 0.5f;
-	mpmGrid.initGrid(origin, padSize, 24, 24);
+	mpmGrid.initGrid(origin, padSize, 32, 32);
 	mpmGrid.initParticles(particles, particleCount);
 
 	// Setup a background image for visualizing the node values
@@ -124,13 +124,12 @@ int main(int argc, char *argv[])
 			// Split so user can apply their own forces to the velocities
 			mpmGrid.update(TIMESTEP);
 		}
-		frameTime += TIMESTEP * SUBSTEPS;
 		
 #ifdef STATS
-		printf("Post FrameTime: %f\n", frameTime);
+		frameTime += TIMESTEP * SUBSTEPS;
+		printf("PostFrameTime: %f\n", frameTime);
 		auto end = std::chrono::steady_clock::now();
 		printf("Sim Time: %fs\n", std::chrono::duration<double, std::milli>(end - start).count() / 1000.0);
-		printIterationStats(&mpmGrid);
 #endif
 
 		updateGridImage(&mpmGrid, &imageMapper);
@@ -165,26 +164,6 @@ int main(int argc, char *argv[])
 	delete[] particles;
 
 	return 1;
-}
-
-void printIterationStats(MPMGrid* mpmGrid)
-{
-	printf("Max Particle defGe Det: %.*f\n", 10, mpmGrid->maxParticleDefDete);
-	printf("Max Particle defGe: \n");
-	MathHelp::printMat(mpmGrid->maxParticleDefe);
-	printf("Max Particle defGp Det: %.*f\n", 10, mpmGrid->maxParticleDefDetp);
-	printf("Max Particle defGp: \n");
-	MathHelp::printMat(mpmGrid->maxParticleDefp);
-
-	printf("Max Particle Velocity Gradient Det:    %.*f\n", 10, mpmGrid->maxParticleVGDet);
-	printf("Max Particle Velocity Gradient: \n");
-	MathHelp::printMat(mpmGrid->maxParticleVG);
-	printf("Max Particle Velocity:                 %.*f\n", 10, mpmGrid->maxParticleVelocityMag);
-	MathHelp::printVec(mpmGrid->maxParticleVelocity);
-
-	printf("Max Node Velocity:                     %.*f\n", 10, mpmGrid->maxNodeVelocity);
-	printf("Max Node Force                         %.*f\n", 10, mpmGrid->maxNodeForceMag);
-	MathHelp::printVec(mpmGrid->maxNodeForce);
 }
 
 // Puts the mass values from the mpmgrid into an image

@@ -38,7 +38,7 @@ static const GLfloat PARTICLE_DIAMETER = 0.03f; // This controls the particle co
 // This becomes important because the energy given by deformation is exponentially increased with plastic deformation
 // This helps particles move more freely when plastically deformed
 // Ie: e^(hardening * (plastic deformation - 1)) is multiplied with both the shear and bulk terms of the energy density equation
-static const GLfloat HARDENING = 10.0f;
+static const GLfloat HARDENING = 15.0f;
 static const GLfloat CRIT_STRETCH = 1.0f + 7.5e-3f;
 static const GLfloat CRIT_COMPRESS = 1.0f - 1.9e-2f;
 
