@@ -51,7 +51,7 @@ void MPMGrid::initGrid(glm::vec2 origin, glm::vec2 size, int width, int height)
 	bounds[0] += cellSize.x;
 	bounds[1] -= cellSize.x;
 	bounds[2] += cellSize.y;
-	bounds[4] -= cellSize.y;
+	bounds[3] -= cellSize.y;
 }
 
 void MPMGrid::initParticles(Particle* particles, UINT count)

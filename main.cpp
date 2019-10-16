@@ -1,32 +1,32 @@
 #include "Constants.h"
-#include "Engine/Geometry2D.h"
-#include "Engine/ImageData.h"
-#include "Engine/ImageMapper.h"
-#include "Engine/Material.h"
-#include "Engine/PlaneSource.h"
-#include "Engine/PNGWriter.h"
-#include "Engine/PolyData.h"
-#include "Engine/PolyDataMapper.h"
-#include "Engine/Renderer.h"
-#include "Engine/RenderWindow.h"
-#include "Engine/TrackballCamera.h"
-#include "Engine/TrackballCameraInteractor.h"
 #include "MPMGrid.h"
 #include "Particle.h"
+#include <CircleSource.h>
+#include <GlyphPolyDataMapper.h>
+#include <ImageData.h>
+#include <ImageMapper.h>
+#include <PhongMaterial.h>
+#include <PlaneSource.h>
+#include <PolyData.h>
+#include <PolyDataMapper.h>
+#include <PolyDataPointCloud.h>
+#include <Renderer.h>
+#include <RenderWindow.h>
+#include <SphereSource.h>
+#include <TrackballCamera.h>
+#include <TrackballCameraInteractor.h>
 
-void printIterationStats(MPMGrid* mpmGrid);
 // Updates image with mass values from mpm grid
 void updateGridImage(MPMGrid* mpmGrid, ImageMapper* mapper);
 // Updates particle poly data with scalar values from particles
-void updateParticlePoly(MPMGrid* mpmGrid, PolyDataMapper* mapper);
+void updateParticlePoly(MPMGrid* mpmGrid, GlyphPolyDataMapper* mapper);
 
 int main(int argc, char *argv[])
 {
 	// Create the window
 	// This has to happen before any gl calls in other objects because 
 	// glfw can only make the opengl context when creating the window.
-	RenderWindow renWindow;
-	renWindow.setWindowName("MPM Simulation");
+	RenderWindow renWindow("MPM Simulation");
 
 	// Create the camera for the renderer to use
 	TrackballCamera cam;
@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
 	// Create the renderer
 	Renderer ren;
 	ren.setCamera(&cam);
-	ren.addMaterial(Material(glm::vec3(0.2f, 0.4f, 0.2f), 0.5f));
-	ren.addMaterial(Material(glm::vec3(0.8f, 0.2f, 0.2f), 1.0f));
+	ren.addMaterial(PhongMaterial(glm::vec3(0.2f, 0.4f, 0.2f), 0.5f));
+	ren.addMaterial(PhongMaterial(glm::vec3(0.8f, 0.2f, 0.2f), 1.0f));
 	renWindow.setRenderer(&ren);
 
 	// Setup the camera interactor (maps user window input to camera)
@@ -55,57 +55,62 @@ int main(int argc, char *argv[])
 	planeMapper.update();
 	ren.addRenderItem(&planeMapper);
 
-	// Generate a 2d poly from a circle
-	geom2d::Poly circlePoly;
-	circlePoly.FromCircle(geom2d::Circle(0.0f, 0.0f, 0.5f), 25); // radius in meters
+	// Generate point cloud within circle
+	CircleSource particleShape;
+	particleShape.setRadius(0.5f);
+	particleShape.setDivisions(25);
+	particleShape.update();
+	const UINT particleCount = static_cast<UINT>(particleShape.getOutput()->getArea() / (PARTICLE_DIAMETER * PARTICLE_DIAMETER));
+	PolyDataPointCloud polyDataPtCloud;
+	polyDataPtCloud.setUse2d(true);
+	polyDataPtCloud.setOptimizeByRadius(true);
+	polyDataPtCloud.setRadius(0.05f);
+	polyDataPtCloud.setNumberOfIterations(30);
+	polyDataPtCloud.setNumberOfPoints(particleCount);
+	polyDataPtCloud.setInput(particleShape.getOutput());
+	polyDataPtCloud.update();
+	PolyData* ptCloudPolyData = polyDataPtCloud.getOutput();
 
-	// Fill the circle with randomely distributed positions
-	GLfloat circlePolyArea = circlePoly.area();
-	GLfloat particleArea = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
-	//GLfloat particleArea = geom2d::Circle(0.0f, 0.0f, PARTICLE_DIAMETER * 0.5f).area();
-	UINT particleCount = static_cast<UINT>(circlePolyArea / particleArea);
-	printf("Polygon Area:   %f\n", circlePolyArea);
-	printf("Particle Area:  %f\n", particleArea);
-	printf("Particle Count: %d\n", particleCount);
-	std::vector<glm::vec2> results = MathHelp::generatePointCloud(&circlePoly, particleCount);
-
+	// Create a uv sphere source for instancing
+	SphereSource particleSphereSource;
+	particleSphereSource.setRadius(0.02f);
+	particleSphereSource.update();
+	// Create the particle mapper
+	GlyphPolyDataMapper particleMapper;
+	particleMapper.setInput(particleSphereSource.getOutput());
+	particleMapper.allocateOffsets(particleCount);
+	particleMapper.allocateColorData(particleCount);
+	glm::vec3* offsetData = reinterpret_cast<glm::vec3*>(particleMapper.getOffsetData());
 	// Setup the polydata and particles
-	PolyData ptCloudPolyData;
-	ptCloudPolyData.allocateVertexData(particleCount, CellType::POINT);
-	ptCloudPolyData.allocateScalarData(3);
-	glm::vec3* posData = reinterpret_cast<glm::vec3*>(ptCloudPolyData.getVertexData());
-	glm::vec3* colorData = reinterpret_cast<glm::vec3*>(ptCloudPolyData.getScalarData());
+	glm::vec3* posData = reinterpret_cast<glm::vec3*>(ptCloudPolyData->getVertexData());
 	Particle* particles = new Particle[particleCount];
-	for (UINT i = 0; i < results.size(); i++)
+	for (UINT i = 0; i < particleCount; i++)
 	{
-		posData[i] = glm::vec3(results[i], 0.0f);
+		offsetData[i] = posData[i];
 
-		particles[i].pos = &posData[i];
+		particles[i].pos = &offsetData[i];
 		particles[i].mass = PARTICLE_MASS;
 		particles[i].bulk = BULK_MODULUS;
 		particles[i].shear = SHEAR_MODULUS;
 	}
 
-	// Setup the particles mapper
-	PolyDataMapper ptCloudMapper;
-	ptCloudMapper.setInput(&ptCloudPolyData);
-	ptCloudMapper.setMaterial(ren.getMaterial(1));
-	ptCloudMapper.setPolyRepresentation(CellType::POINT);
-	ptCloudMapper.update();
-	ren.addRenderItem(&ptCloudMapper);
+	ren.addRenderItem(&particleMapper);
 
 	// Setup the MPMGrid for simulation
-	geom2d::Rect bounds = MathHelp::get2dBounds(results.data(), results.size());
 	MPMGrid mpmGrid;
 	GLfloat padScale = 2.0f;
-	glm::vec2 padSize = bounds.size() * padScale;
-	glm::vec2 origin = bounds.pos - padSize * 0.5f;
-	mpmGrid.initGrid(origin, padSize, 32, 32);
+	GLfloat* bounds = polyDataPtCloud.getBounds();
+	glm::vec2 padSize = glm::vec2(bounds[1] - bounds[0], bounds[3] - bounds[2]) * padScale;
+	glm::vec2 boundsCenter = glm::vec2(bounds[1] + bounds[0], bounds[3] + bounds[2]) * 0.5f;
+	glm::vec2 origin = boundsCenter - padSize * 0.5f;
+	mpmGrid.initGrid(origin, padSize, GRID_DIM, GRID_DIM);
 	mpmGrid.initParticles(particles, particleCount);
+
+	updateParticlePoly(&mpmGrid, &particleMapper);
 
 	// Setup a background image for visualizing the node values
 	ImageMapper imageMapper;
-	imageMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, bounds.pos.y, -0.1f));
+	imageMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, boundsCenter.y, -0.1f));
 	ren.addRenderItem(&imageMapper);
 
 	// Update loop
@@ -133,7 +138,7 @@ int main(int argc, char *argv[])
 #endif
 
 		updateGridImage(&mpmGrid, &imageMapper);
-		updateParticlePoly(&mpmGrid, &ptCloudMapper);
+		updateParticlePoly(&mpmGrid, &particleMapper);
 		renWindow.render();
 #ifdef OUTPUTFRAMES
 		// Get the frame
@@ -196,22 +201,21 @@ void updateGridImage(MPMGrid* mpmGrid, ImageMapper* mapper)
 }
 
 // Puts the defGp values into color values for the poly
-void updateParticlePoly(MPMGrid* mpmGrid, PolyDataMapper* mapper)
+void updateParticlePoly(MPMGrid* mpmGrid, GlyphPolyDataMapper* mapper)
 {
-	PolyData* polyData = mapper->getInput();
-	glm::vec3* colors = reinterpret_cast<glm::vec3*>(polyData->getScalarData());
+	glm::vec3* colors = reinterpret_cast<glm::vec3*>(mapper->getColorData());
 	GLfloat max = 0.0f;
-	for (UINT i = 0; i < polyData->getNumOfPoints(); i++)
+	for (UINT i = 0; i < mapper->getInstanceCount(); i++)
 	{
-		colors[i].x = glm::determinant(mpmGrid->particles[i].defGp);
-		if (colors[i].x > max)
-			max = colors[i].x;
-		colors[i].y = 0.0f;
+		colors[i].y = glm::determinant(mpmGrid->particles[i].defGp);
+		if (colors[i].y > max)
+			max = colors[i].y;
+		colors[i].x = 0.0f;
 		colors[i].z = 0.0f;
 	}
-	for (UINT i = 0; i < polyData->getNumOfPoints(); i++)
+	for (UINT i = 0; i < mapper->getInstanceCount(); i++)
 	{
-		colors[i].x *= 1.0f / max;
+		colors[i].y *= 1.0f / max;
 	}
 	mapper->update();
 }
