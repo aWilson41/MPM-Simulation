@@ -29,8 +29,7 @@ int main(int argc, char *argv[])
 	RenderWindow renWindow("MPM Simulation");
 
 	// Create the camera for the renderer to use
-	TrackballCamera cam;
-	cam.initTrackballCamera(1.4f, 1.57f, 30.0f);
+	TrackballCamera cam(1.4f, 1.57f, 30.0f);
 
 	// Create the renderer
 	Renderer ren;
@@ -51,7 +50,7 @@ int main(int argc, char *argv[])
 	PolyDataMapper planeMapper;
 	planeMapper.setInput(plane.getOutput());
 	planeMapper.setMaterial(ren.getMaterial(0));
-	planeMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, -2.0f, 0.0f) * MathHelp::matrixScale(10.0f));
+	planeMapper.setModelMatrix(MathHelp::translate(0.0f, -2.0f, 0.0f) * MathHelp::scale(10.0f));
 	planeMapper.update();
 	ren.addRenderItem(&planeMapper);
 
@@ -110,7 +109,7 @@ int main(int argc, char *argv[])
 
 	// Setup a background image for visualizing the node values
 	ImageMapper imageMapper;
-	imageMapper.setModelMatrix(MathHelp::matrixTranslate(0.0f, boundsCenter.y, -0.1f));
+	imageMapper.setModelMatrix(MathHelp::translate(0.0f, boundsCenter.y, -0.1f));
 	ren.addRenderItem(&imageMapper);
 
 	// Update loop
